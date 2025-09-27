@@ -3,88 +3,175 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ title }}</title>
+  <title>{{ title or "Green Toolkit" }}</title>
 
-  <!-- Tailwind CSS via CDN (simple for now) -->
+  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Basic page theme -->
-  <style>
-    :root { color-scheme: light dark; }
-  </style>
+  <meta name="description" content="Open-access toolkit for sustainable synthetic chemistry: principles, solvents, energy efficiency, waste management, calculators, and case studies aligned with UN SDGs." />
+  <style>:root { color-scheme: light dark; }</style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900">
-  <!-- Header / Nav -->
+  <!-- Header -->
   <header class="bg-white border-b">
-    <div class="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="h-8 w-8 rounded-xl bg-emerald-500"></div>
-        <h1 class="text-xl font-semibold">Green Toolkit</h1>
-      </div>
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <a class="flex items-center gap-2" href="/">
+        <div class="h-8 w-8 rounded-xl bg-emerald-600"></div>
+        <span class="text-xl font-semibold">Green Toolkit</span>
+      </a>
       <nav class="flex gap-4 text-sm">
-        <a href="/" class="hover:text-emerald-600">Home</a>
-        <a href="#" class="hover:text-emerald-600">Docs</a>
-        <a href="#" class="hover:text-emerald-600">Community</a>
+        <a class="hover:text-emerald-700" href="/">Home</a>
+        <a class="hover:text-emerald-700" href="#tools">Tools</a>
+        <a class="hover:text-emerald-700" href="#case-studies">Case Studies</a>
       </nav>
     </div>
   </header>
 
   <!-- Hero -->
-  <main class="mx-auto max-w-5xl px-4 py-12">
+  <main class="mx-auto max-w-6xl px-4 py-10">
     <section class="rounded-2xl bg-white p-8 shadow-sm border">
-      <h2 class="text-2xl md:text-3xl font-bold mb-3">
-        {{ subtitle }}
-      </h2>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">
+        We are ready to build green tool
+      </h1>
       <p class="text-gray-600 mb-6">
-        This is your starter page. From here we’ll add calculators (Atom Economy, E-factor, PMI),
-        a simulation sandbox, and dashboards. For now, try the buttons below.
+        An open-access, web-based toolkit to help synthetic chemistry labs adopt greener, safer, and
+        more energy-efficient practices—aligned with UN Sustainable Development Goals (SDGs).
       </p>
-
-      <div class="flex flex-wrap gap-3">
-        <a href="/api/health"
-           class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50">
-          Check API Health (JSON)
-        </a>
-
-        <button
-          onclick="alert('Coming soon: Atom Economy Calculator')"
-          class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-          Atom Economy (soon)
-        </button>
-
-        <button
-          onclick="alert('Coming soon: Scenario Compare A/B')"
-          class="inline-flex items-center justify-center rounded-xl bg-white border px-4 py-2 text-sm font-medium hover:bg-gray-50">
-          Scenario Compare (soon)
-        </button>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 3</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 6</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 7</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 9</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 12</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 13</span>
+        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 17</span>
       </div>
     </section>
 
-    <!-- Roadmap / placeholders -->
-    <section class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="rounded-2xl bg-white p-6 shadow-sm border">
-        <h3 class="font-semibold mb-2">Calculators</h3>
-        <p class="text-sm text-gray-600">Atom Economy, E-factor, PMI, Energy. Input forms + instant results.</p>
-      </div>
-      <div class="rounded-2xl bg-white p-6 shadow-sm border">
-        <h3 class="font-semibold mb-2">Recommender</h3>
-        <p class="text-sm text-gray-600">Greener solvents & route variants with predicted impact.</p>
-      </div>
-      <div class="rounded-2xl bg-white p-6 shadow-sm border">
-        <h3 class="font-semibold mb-2">Dashboards</h3>
-        <p class="text-sm text-gray-600">Trends for PMI/E-factor, waste streams, and energy intensity.</p>
+    <!-- Six core sections -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <!-- Green Chemistry Principles -->
+      <article class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Green Chemistry Principles</h2>
+        <p class="text-gray-600 mb-3">
+          Comprehensive overview and practical applications, emphasizing actionable items and real-world
+          implementation strategies, directly contributing to <strong>SDG 12</strong> (Responsible Consumption and Production).
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Design for prevention: minimize hazards and waste at the source.</li>
+          <li>Use safer solvents & auxiliaries; consider solvent-free conditions.</li>
+          <li>Design for energy efficiency (lower T/P, alternative energy inputs).</li>
+          <li>Real-time monitoring to prevent by-products; catalysis over stoichiometric reagents.</li>
+        </ul>
+      </article>
+
+      <!-- Sustainable Reagents and Solvents -->
+      <article class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Sustainable Reagents & Solvents</h2>
+        <p class="text-gray-600 mb-3">
+          Selection and sourcing of greener chemicals, focusing on less hazardous alternatives and renewable feedstocks,
+          supporting <strong>SDG 3</strong> (Good Health and Well-being) and <strong>SDG 12</strong>.
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Solvent substitution guides (e.g., swap DMF/DMSO to 2-MeTHF/EtOAc/MeOH where feasible).</li>
+          <li>Prefer bio-based/renewable feedstocks and low-toxicity reagents.</li>
+          <li>Maintain an inventory with hazard bands and recycling options.</li>
+          <li>Supplier transparency: SDS, origin, and waste/disposal notes.</li>
+        </ul>
+      </article>
+
+      <!-- Energy and Resource Efficiency -->
+      <article class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Energy & Resource Efficiency</h2>
+        <p class="text-gray-600 mb-3">
+          Techniques to minimize energy and resource use, including “low grid-time” scheduling for compute (e.g., off-peak DFT runs),
+          aligning with <strong>SDG 7</strong> (Affordable & Clean Energy) and <strong>SDG 13</strong> (Climate Action).
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Lower temperature profiles; microwave/flow options to cut time/energy.</li>
+          <li>Heat-integration and equipment scheduling around off-peak hours.</li>
+          <li>Water-smart workups; vacuum/rotavap best practices to reduce losses.</li>
+          <li>Track kWh per gram product; benchmark and improve.</li>
+        </ul>
+      </article>
+
+      <!-- Waste Management -->
+      <article class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Waste Management</h2>
+        <p class="text-gray-600 mb-3">
+          Best practices for waste reduction, recycling, and disposal, emphasizing circular economy principles and
+          quantifiable targets—supporting <strong>SDG 6</strong> (Clean Water and Sanitation) and <strong>SDG 12</strong>.
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Set PMI/E-factor targets per project; prioritize solvent recovery.</li>
+          <li>Segregate waste streams (aqueous/organic/halogenated/solid) correctly.</li>
+          <li>Closed-loop reuse for wash solvents and rinses where validated.</li>
+          <li>Document & audit disposal routes; reduce hazardous fractions.</li>
+        </ul>
+      </article>
+
+      <!-- Tools and Calculators -->
+      <article id="tools" class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Tools & Calculators</h2>
+        <p class="text-gray-600 mb-3">
+          Online calculators for atom economy, E-factor, water/energy use, plus AI-assisted route prediction to minimize waste
+          before experiments—supporting <strong>SDG 9</strong> (Industry, Innovation & Infrastructure).
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Atom Economy, PMI, E-factor, Solvent Intensity dashboards.</li>
+          <li>Sankey/radar charts for trade-offs; sensitivity analysis sliders.</li>
+          <li>Solvent recommender (hazard bands, bp/polarity compatibility).</li>
+          <li>Scenario A/B/C route compare with “greener variant” suggestions.</li>
+        </ul>
+        <div class="mt-4">
+          <a href="/api/health" class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+            Check API Health
+          </a>
+        </div>
+      </article>
+
+      <!-- Case Studies -->
+      <article id="case-studies" class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Case Studies</h2>
+        <p class="text-gray-600 mb-3">
+          Real-world examples of sustainable practices in diverse research settings, highlighting successful implementations and
+          lessons learned—demonstrating practical contributions to the UN SDGs.
+        </p>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <li>Solvent swaps that cut PMI by 30–60% without yield loss.</li>
+          <li>Flow/telescoped steps reducing workup solvents and energy.</li>
+          <li>Waste segregation + recovery programs that lower disposal cost.</li>
+          <li>Team training outcomes: safety improvements and adoption rates.</li>
+        </ul>
+      </article>
+    </section>
+
+    <!-- CTA / Next steps -->
+    <section class="mt-10 rounded-2xl bg-emerald-50 border border-emerald-100 p-6">
+      <h3 class="text-lg font-semibold mb-2">Next: Add your first calculator</h3>
+      <p class="text-sm text-emerald-900 mb-4">
+        We’ll start with a simple Atom Economy calculator and then expand to PMI, E-factor, and scenario comparison.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <button onclick="alert('Coming soon: Atom Economy Calculator')"
+          class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+          Atom Economy (coming soon)
+        </button>
+        <button onclick="alert('Coming soon: Scenario Compare')"
+          class="rounded-xl bg-white border px-4 py-2 text-sm font-medium hover:bg-gray-50">
+          Scenario Compare (coming soon)
+        </button>
       </div>
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="mt-12 border-t">
-    <div class="mx-auto max-w-5xl px-4 py-6 text-xs text-gray-500">
-      © <span id="year"></span> Green Toolkit • Built with FastAPI + Tailwind
+    <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
+      © <span id="year"></span> Green Toolkit • Built with FastAPI + Tailwind • Aligned with SDGs 3, 6, 7, 9, 12, 13, 17
     </div>
   </footer>
 
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
