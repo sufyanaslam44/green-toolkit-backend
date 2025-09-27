@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }}</title>
+
+  <!-- Tailwind CSS via CDN (simple for now) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Basic page theme -->
+  <style>
+    :root { color-scheme: light dark; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <!-- Header / Nav -->
+  <header class="bg-white border-b">
+    <div class="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded-xl bg-emerald-500"></div>
+        <h1 class="text-xl font-semibold">Green Toolkit</h1>
+      </div>
+      <nav class="flex gap-4 text-sm">
+        <a href="/" class="hover:text-emerald-600">Home</a>
+        <a href="#" class="hover:text-emerald-600">Docs</a>
+        <a href="#" class="hover:text-emerald-600">Community</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main class="mx-auto max-w-5xl px-4 py-12">
+    <section class="rounded-2xl bg-white p-8 shadow-sm border">
+      <h2 class="text-2xl md:text-3xl font-bold mb-3">
+        {{ subtitle }}
+      </h2>
+      <p class="text-gray-600 mb-6">
+        This is your starter page. From here we’ll add calculators (Atom Economy, E-factor, PMI),
+        a simulation sandbox, and dashboards. For now, try the buttons below.
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <a href="/api/health"
+           class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50">
+          Check API Health (JSON)
+        </a>
+
+        <button
+          onclick="alert('Coming soon: Atom Economy Calculator')"
+          class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+          Atom Economy (soon)
+        </button>
+
+        <button
+          onclick="alert('Coming soon: Scenario Compare A/B')"
+          class="inline-flex items-center justify-center rounded-xl bg-white border px-4 py-2 text-sm font-medium hover:bg-gray-50">
+          Scenario Compare (soon)
+        </button>
+      </div>
+    </section>
+
+    <!-- Roadmap / placeholders -->
+    <section class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h3 class="font-semibold mb-2">Calculators</h3>
+        <p class="text-sm text-gray-600">Atom Economy, E-factor, PMI, Energy. Input forms + instant results.</p>
+      </div>
+      <div class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h3 class="font-semibold mb-2">Recommender</h3>
+        <p class="text-sm text-gray-600">Greener solvents & route variants with predicted impact.</p>
+      </div>
+      <div class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h3 class="font-semibold mb-2">Dashboards</h3>
+        <p class="text-sm text-gray-600">Trends for PMI/E-factor, waste streams, and energy intensity.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-12 border-t">
+    <div class="mx-auto max-w-5xl px-4 py-6 text-xs text-gray-500">
+      © <span id="year"></span> Green Toolkit • Built with FastAPI + Tailwind
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
