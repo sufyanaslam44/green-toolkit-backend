@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -33,12 +33,13 @@ def calc_atom_economy(payload: AtomEconomyIn):
     ae = (payload.mw_product / payload.mw_reactants_total) * 100.0
     return {"atom_economy_pct": round(ae, 2)}
 
-# ---------- Homepage ----------
+# ---------- Pages ----------
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    context = {
-        "request": request,
-        "title": "Green Toolkit",
-        "subtitle": "We are ready to build green tool",
-    }
+    context = {"request": request, "title": "Green Toolkit", "subtitle": "We are ready to build green tool"}
     return templates.TemplateResponse("index.html", context)
+
+@app.get("/tools", response_class=HTMLResponse)
+def tools_page(request: Request):
+    context = {"request": request, "title": "Tools & Calculators"}
+    return templates.TemplateResponse("tools.html", context)

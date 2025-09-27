@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Tools & Calculators" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Atom Economy, PMI, E-factor and sustainability calculators for green chemistry." />
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <!-- Header -->
+  <header class="bg-white border-b">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <a class="flex items-center gap-2" href="/">
+        <div class="h-8 w-8 rounded-xl bg-emerald-600"></div>
+        <span class="text-xl font-semibold">Green Toolkit</span>
+      </a>
+      <nav class="flex gap-4 text-sm">
+        <a class="hover:text-emerald-700" href="/">Home</a>
+        <a class="text-emerald-700 font-medium" href="/tools">Tools</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">Tools & Calculators</h1>
+    <p class="text-gray-600 mb-8">
+      Quick calculators to estimate sustainability metrics. Start with Atom Economy, then add PMI and E-factor.
+    </p>
+
+    <!-- Atom Economy -->
+    <section class="rounded-2xl bg-white p-6 shadow-sm border" id="atom-economy">
+      <h2 class="text-xl font-semibold mb-2">Atom Economy</h2>
+      <p class="text-sm text-gray-600 mb-4">
+        AE (%) = (MW of desired product / Sum of MW of all reactants) × 100
+      </p>
+
+      <form id="ae-form" class="grid gap-3 max-w-md">
+        <label class="grid gap-1">
+          <span class="text-sm text-gray-700">Product MW (g/mol)</span>
+          <input type="number" id="mw_product" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 30" />
+        </label>
+        <label class="grid gap-1">
+          <span class="text-sm text-gray-700">Total Reactants MW (g/mol)</span>
+          <input type="number" id="mw_reactants_total" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 30" />
+        </label>
+
+        <div class="flex items-center gap-3 mt-2">
+          <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+            Calculate
+          </button>
+          <span id="ae-output" class="text-sm text-gray-800 hidden">
+            <strong>Atom Economy:</strong> <span id="ae-value">—</span> %
+          </span>
+        </div>
+      </form>
+    </section>
+
+    <!-- PMI (placeholder) -->
+    <section class="rounded-2xl bg-white p-6 shadow-sm border mt-8" id="pmi">
+      <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
+      <p class="text-sm text-gray-600">
+        Coming soon: PMI = Total mass in / Product mass. We’ll add inputs for product mass, reagents, and solvents.
+      </p>
+    </section>
+
+    <!-- E-factor (placeholder) -->
+    <section class="rounded-2xl bg-white p-6 shadow-sm border mt-8" id="efactor">
+      <h2 class="text-xl font-semibold mb-2">E-factor</h2>
+      <p class="text-sm text-gray-600">
+        Coming soon: E-factor = (Total mass in – Product mass) / Product mass. We’ll include fields for waste streams and solvent recovery.
+      </p>
+    </section>
+  </main>
+
+  <footer class="mt-12 border-t">
+    <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
+      © <span id="year"></span> Green Toolkit • Tools & Calculators
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const form = document.getElementById('ae-form');
+    const output = document.getElementById('ae-output');
+    const valueEl = document.getElementById('ae-value');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mw_product = parseFloat(document.getElementById('mw_product').value);
+      const mw_reactants_total = parseFloat(document.getElementById('mw_reactants_total').value);
+
+      try {
+        const res = await fetch('/api/atom-economy', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ mw_product, mw_reactants_total }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || 'Error calculating Atom Economy');
+          return;
+        }
+        valueEl.textContent = Number(data.atom_economy_pct).toFixed(2);
+        output.classList.remove('hidden');
+      } catch (err) {
+        alert('Network error. Is the server running?');
+      }
+    });
+  </script>
+</body>
+</html>
