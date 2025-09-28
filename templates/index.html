@@ -1,125 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ title or "Green Toolkit" }}</title>
-
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <meta name="description" content="Open-access toolkit for sustainable synthetic chemistry: principles, solvents, energy efficiency, waste management, calculators, and case studies aligned with UN SDGs." />
-  <style>:root { color-scheme: light dark; }</style>
+    <meta charset="UTF-8">
+    <title>Visualization Green Toolkit</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .box {
+            border: 2px solid green;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900">
-  <!-- Header -->
-  <header class="bg-white border-b">
-    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-      <a class="flex items-center gap-2" href="/">
-        <div class="h-8 w-8 rounded-xl bg-emerald-600"></div>
-        <span class="text-xl font-semibold">Green Toolkit</span>
-      </a>
-      <nav class="flex gap-4 text-sm">
-        <a class="hover:text-emerald-700" href="/">Home</a>
-        <a class="hover:text-emerald-700" href="#tools">Tools</a>
-        <a class="hover:text-emerald-700" href="#case-studies">Case Studies</a>
-      </nav>
+<body>
+    <div class="box">
+        <h1>Visualization Green Toolkit</h1>
+        <p>We are ready to build</p>
     </div>
-  </header>
-
-  <!-- Hero -->
-  <main class="mx-auto max-w-6xl px-4 py-10">
-    <section class="rounded-2xl bg-emerald-600 p-8 shadow-sm border">
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-white">
-        We are ready to build Green Toolkit
-      </h1>
-      <p class="text-white-600 mb-6">
-        An open-access, web-based toolkit to help synthetic chemistry labs adopt greener, safer, and
-        more energy-efficient practices—aligned with UN Sustainable Development Goals (SDGs).
-      </p>
-      <div class="flex flex-wrap gap-2 text-xs">
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 3</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 6</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 7</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 9</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 12</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 13</span>
-        <span class="px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border">SDG 17</span>
-      </div>
-    </section>
-
-    <!-- Six core sections -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-      <!-- Tools and Calculators -->
-<a href="/tools" class="block rounded-2xl bg-emerald-600 p-6 shadow-sm border hover:bg-slate-800 transition">
-  <h2 class="text-xl font-semibold mb-2 text-white">Tools & Calculators</h2>
-  <p class="text-emerald-100 mb-3 hover:text-white transition">
-    Click here to explore calculators like Atom Economy, PMI, and E-factor.
-  </p>
-</a>
-
-        
-       
-      </article>
-      <!-- Green Chemistry Principles -->
-      <article class="rounded-2xl bg-emerald-600 p-6 shadow-sm border">
-        <h2 class="text-xl font-semibold mb-2 text-white">Green Chemistry Principles</h2>
-        <p class="text-white-600 mb-3">
-          Coming soon...
-        </p>
-        
-      </article>
-
-      <!-- Sustainable Reagents and Solvents -->
-      <article class="rounded-2xl bg-emerald-600 p-6 shadow-sm border">
-        <h2 class="text-xl font-semibold mb-2 text-white">Sustainable Reagents & Solvents</h2>
-        <p class="text-white-600 mb-3">
-          Coming soon...
-        </p>
-        
-      </article>
-
-      <!-- Energy and Resource Efficiency -->
-      <article class="rounded-2xl bg-emerald-600 p-6 shadow-sm border">
-        <h2 class="text-xl font-semibold mb-2 text-white">Energy & Resource Efficiency</h2>
-        <p class="text-white-600 mb-3">
-          Coming soon...
-        </p>
-        
-      </article>
-
-      <!-- Waste Management -->
-      <article class="rounded-2xl bg-emerald-600 p-6 shadow-sm border">
-        <h2 class="text-xl font-semibold mb-2 text-white">Waste Management</h2>
-        <p class="text-white-600 mb-3">
-         Coming soon...
-        </p>
-        
-      </article>
-
-      
-
-      <!-- Case Studies -->
-      <article id="case-studies" class="rounded-2xl bg-emerald-600 p-6 shadow-sm border">
-        <h2 class="text-xl font-semibold mb-2 text-white">Case Studies</h2>
-        <p class="text-white-600 mb-3">
-          Coming soon...
-        </p>
-
-      </article>
-    </section>
-
-    
-    
-  </main>
-
-  <!-- Footer -->
-  <footer class="mt-12 border-t">
-    <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
-      © <span id="year"></span> Green Toolkit • Built with FastAPI + Tailwind • Aligned with SDGs 3, 6, 7, 9, 12, 13, 17
-    </div>
-  </footer>
-
-  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
