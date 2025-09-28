@@ -46,6 +46,21 @@ def calc_e_factor(payload: EFactorIn):
         raise HTTPException(status_code=400, detail="Total mass in must be ≥ product mass.")
     e = (payload.total_mass_in - payload.product_mass) / payload.product_mass
     return {"e_factor": round(e, 4)}
+# ---------- PMI (Process Mass Intensity) API ----------
+class PMIIn(BaseModel):
+    total_mass_in: float = Field(gt=0, description="Total mass of all inputs (g)")
+    product_mass: float = Field(gt=0, description="Mass of desired product (g)")
+
+class PMIOut(BaseModel):
+    pmi: float
+
+@app.post("/api/pmi", response_model=PMIOut)
+def calc_pmi(payload: PMIIn):
+    # PMI = total mass in / product mass
+    if payload.total_mass_in <= 0 or payload.product_mass <= 0:
+        raise HTTPException(status_code=400, detail="Both values must be > 0.")
+    pmi = payload.total_mass_in / payload.product_mass
+    return {"pmi": round(pmi, 4)}
 
 
 

@@ -101,14 +101,39 @@
         </form>
       </section>
 
-      <!-- PMI (placeholder) -->
-      <section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="pmi">
-        <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
-        <p class="text-sm text-gray-600">
-          Coming soon: PMI = Total mass in / Product mass. We’ll add inputs for product mass, reagents, and solvents,
-          plus toggles for solvent recovery to reflect realistic processes.
-        </p>
-      </section>
+      <!-- PMI -->
+<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="pmi">
+  <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
+  <p class="text-sm text-gray-600 mb-4">
+    <span class="font-medium">Formula:</span> PMI = Total mass of reactants / Total mass of products
+  </p>
+
+  <form id="pmi-form" class="grid gap-3 max-w-md" novalidate>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Total mass of reactants (g)</span>
+      <input type="number" id="pmi_total_in" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 15.4" />
+    </label>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Total mass of products (g)</span>
+      <input type="number" id="pmi_product" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 5.7" />
+    </label>
+
+    <div class="flex items-center gap-3 mt-2">
+      <button type="submit"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+        Calculate
+      </button>
+      <span id="pmi-output" class="text-sm text-gray-800 hidden">
+        <strong>PMI:</strong> <span id="pmi-value">—</span>
+      </span>
+    </div>
+
+    <p id="pmi-error" class="text-sm text-red-600 mt-2 hidden"></p>
+  </form>
+</section>
+
 
     </div>
   </main>
@@ -202,6 +227,46 @@
         show(efErr);
       }
     });
+    // --- PMI ---
+  const pmiForm = document.getElementById('pmi-form');
+  const pmiOut = document.getElementById('pmi-output');
+  const pmiVal = document.getElementById('pmi-value');
+  const pmiErr = document.getElementById('pmi-error');
+
+  function show(el){ el.classList.remove('hidden'); }
+  function hide(el){ el.classList.add('hidden'); }
+  function toNum(v){ const n = Number(v); return Number.isFinite(n) ? n : NaN; }
+
+  pmiForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hide(pmiErr);
+
+    const total_mass_in = toNum(document.getElementById('pmi_total_in').value);
+    const product_mass = toNum(document.getElementById('pmi_product').value);
+
+    if (!(total_mass_in > 0) || !(product_mass > 0)) {
+      pmiErr.textContent = 'Please enter positive numbers for both fields.';
+      show(pmiErr); return;
+    }
+
+    try {
+      const res = await fetch('/api/pmi', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ total_mass_in, product_mass }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        pmiErr.textContent = data.detail || 'Error calculating PMI.';
+        show(pmiErr); return;
+      }
+      pmiVal.textContent = Number(data.pmi).toFixed(4);
+      show(pmiOut);
+    } catch {
+      pmiErr.textContent = 'Network error. Is the server running?';
+      show(pmiErr);
+    }
+  });
   </script>
 </body>
 </html>
