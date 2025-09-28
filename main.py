@@ -289,3 +289,8 @@ def home(request: Request):
 def tools_page(request: Request):
     context = {"request": request, "title": "Tools & Calculators"}
     return templates.TemplateResponse("tools.html", context)
+@app.get("/simulate", response_class=HTMLResponse)
+def simulate_page(request: Request):
+    context = {"request": request, "title": "Simulations"}
+    return templates.TemplateResponse("sim.html", context)
+
