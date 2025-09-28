@@ -133,6 +133,73 @@
     <p id="pmi-error" class="text-sm text-red-600 mt-2 hidden"></p>
   </form>
 </section>
+<!-- Water Usage -->
+<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-1" id="water-usage">
+  <h2 class="text-xl font-semibold mb-2">Water Usage</h2>
+  <p class="text-sm text-gray-600 mb-4">
+    <span class="font-medium">Metric:</span> Normalize total water used by product mass.
+    Reports <em>liters per gram</em> and <em>liters per kilogram</em> of product.
+  </p>
+
+  <form id="water-form" class="grid gap-3 max-w-md" novalidate>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Total water used (L)</span>
+      <input type="number" id="water_liters" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 12.5" />
+    </label>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Product mass (g)</span>
+      <input type="number" id="water_product_g" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 25" />
+    </label>
+
+    <div class="flex items-center gap-3 mt-2">
+      <button type="submit"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+        Calculate
+      </button>
+      <span id="water-output" class="text-sm text-gray-800 hidden">
+        <strong>L/g:</strong> <span id="water-lpg">—</span> |
+        <strong>L/kg:</strong> <span id="water-lpk">—</span>
+      </span>
+    </div>
+    <p id="water-error" class="text-sm text-red-600 mt-2 hidden"></p>
+  </form>
+</section>
+
+<!-- Energy Use -->
+<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-1" id="energy-use">
+  <h2 class="text-xl font-semibold mb-2">Energy Use</h2>
+  <p class="text-sm text-gray-600 mb-4">
+    <span class="font-medium">Metric:</span> Normalize total energy used by product mass.
+    Reports <em>kWh per gram</em> and <em>kWh per kilogram</em> of product.
+  </p>
+
+  <form id="energy-form" class="grid gap-3 max-w-md" novalidate>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Total energy (kWh)</span>
+      <input type="number" id="energy_kwh" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 3.2" />
+    </label>
+    <label class="grid gap-1">
+      <span class="text-sm text-gray-700">Product mass (g)</span>
+      <input type="number" id="energy_product_g" step="any" min="0" required
+             class="border rounded-lg px-3 py-2" placeholder="e.g., 40" />
+    </label>
+
+    <div class="flex items-center gap-3 mt-2">
+      <button type="submit"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+        Calculate
+      </button>
+      <span id="energy-output" class="text-sm text-gray-800 hidden">
+        <strong>kWh/g:</strong> <span id="energy-kwhpg">—</span> |
+        <strong>kWh/kg:</strong> <span id="energy-kwhpk">—</span>
+      </span>
+    </div>
+    <p id="energy-error" class="text-sm text-red-600 mt-2 hidden"></p>
+  </form>
+</section>
 
 
     </div>
@@ -265,6 +332,77 @@
     } catch {
       pmiErr.textContent = 'Network error. Is the server running?';
       show(pmiErr);
+    }
+  });
+  // --- Water Usage ---
+  const wForm = document.getElementById('water-form');
+  const wErr = document.getElementById('water-error');
+  const wOut = document.getElementById('water-output');
+  const wLpg = document.getElementById('water-lpg');
+  const wLpk = document.getElementById('water-lpk');
+
+  wForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); hide(wErr);
+
+    const water_liters = toNum(document.getElementById('water_liters').value);
+    const product_mass_g = toNum(document.getElementById('water_product_g').value);
+
+    if (!(water_liters >= 0) || !(product_mass_g > 0)) {
+      wErr.textContent = 'Enter valid numbers (water ≥ 0, product > 0).';
+      show(wErr); return;
+    }
+
+    try {
+      const res = await fetch('/api/water-impact', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ water_liters, product_mass_g })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        wErr.textContent = data.detail || 'Error calculating water impact.'; show(wErr); return;
+        }
+      wLpg.textContent = Number(data.liters_per_g).toFixed(4);
+      wLpk.textContent = Number(data.liters_per_kg).toFixed(2);
+      show(wOut);
+    } catch {
+      wErr.textContent = 'Network error. Is the server running?'; show(wErr);
+    }
+  });
+
+  // --- Energy Use ---
+  const eForm = document.getElementById('energy-form');
+  const eErr = document.getElementById('energy-error');
+  const eOut = document.getElementById('energy-output');
+  const eKwhpg = document.getElementById('energy-kwhpg');
+  const eKwhpk = document.getElementById('energy-kwhpk');
+
+  eForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); hide(eErr);
+
+    const kwh = toNum(document.getElementById('energy_kwh').value);
+    const product_mass_g = toNum(document.getElementById('energy_product_g').value);
+
+    if (!(kwh >= 0) || !(product_mass_g > 0)) {
+      eErr.textContent = 'Enter valid numbers (kWh ≥ 0, product > 0).';
+      show(eErr); return;
+    }
+
+    try {
+      const res = await fetch('/api/energy-impact', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ kwh, product_mass_g })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        eErr.textContent = data.detail || 'Error calculating energy impact.'; show(eErr); return;
+      }
+      eKwhpg.textContent = Number(data.kwh_per_g).toFixed(6);
+      eKwhpk.textContent = Number(data.kwh_per_kg).toFixed(4);
+      show(eOut);
+    } catch {
+      eErr.textContent = 'Network error. Is the server running?'; show(eErr);
     }
   });
   </script>

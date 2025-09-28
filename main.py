@@ -61,6 +61,37 @@ def calc_pmi(payload: PMIIn):
         raise HTTPException(status_code=400, detail="Both values must be > 0.")
     pmi = payload.total_mass_in / payload.product_mass
     return {"pmi": round(pmi, 4)}
+# ---------- Water Impact API ----------
+class WaterImpactIn(BaseModel):
+    water_liters: float = Field(ge=0, description="Total water used (L)")
+    product_mass_g: float = Field(gt=0, description="Mass of desired product (g)")
+
+class WaterImpactOut(BaseModel):
+    liters_per_g: float
+    liters_per_kg: float
+
+@app.post("/api/water-impact", response_model=WaterImpactOut)
+def calc_water_impact(payload: WaterImpactIn):
+    # L per g and L per kg product
+    lpg = payload.water_liters / payload.product_mass_g
+    lpk = lpg * 1000.0
+    return {"liters_per_g": round(lpg, 4), "liters_per_kg": round(lpk, 2)}
+
+# ---------- Energy Impact API ----------
+class EnergyImpactIn(BaseModel):
+    kwh: float = Field(ge=0, description="Total energy used (kWh)")
+    product_mass_g: float = Field(gt=0, description="Mass of desired product (g)")
+
+class EnergyImpactOut(BaseModel):
+    kwh_per_g: float
+    kwh_per_kg: float
+
+@app.post("/api/energy-impact", response_model=EnergyImpactOut)
+def calc_energy_impact(payload: EnergyImpactIn):
+    # kWh per g and per kg product
+    kwhpg = payload.kwh / payload.product_mass_g
+    kwhpk = kwhpg * 1000.0
+    return {"kwh_per_g": round(kwhpg, 6), "kwh_per_kg": round(kwhpk, 4)}
 
 
 
