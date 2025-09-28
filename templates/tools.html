@@ -69,18 +69,19 @@
       <section class="rounded-2xl bg-white p-6 shadow-sm border" id="efactor">
         <h2 class="text-xl font-semibold mb-2">E-factor</h2>
         <p class="text-sm text-gray-600 mb-4">
-          <span class="font-medium">Formula:</span> E-factor = (Total mass of waste generated / Mass of isolated product)
+          <span class="font-medium">Formula:</span> E-factor = (Total mass of reactants - Total mass of products) / Total mass of products<br>
+          Where, Total mass of reactants - Total mass of products = mass of waste
         </p>
 
         <form id="ef-form" class="grid gap-3 max-w-md" novalidate>
           <label class="grid gap-1">
-            <span class="text-sm text-gray-700">Total mass of waste generated (g)</span>
+            <span class="text-sm text-gray-700">Total mass of reactants (g)</span>
             <input type="number" id="ef_total_in" step="any" min="0" required
                    class="border rounded-lg px-3 py-2"
                    placeholder="e.g., 150" />
           </label>
           <label class="grid gap-1">
-            <span class="text-sm text-gray-700">Mass of isolated product (g)</span>
+            <span class="text-sm text-gray-700">Total mass of products (g)</span>
             <input type="number" id="ef_product" step="any" min="0" required
                    class="border rounded-lg px-3 py-2"
                    placeholder="e.g., 30" />

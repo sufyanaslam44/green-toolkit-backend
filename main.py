@@ -48,6 +48,7 @@ def calc_e_factor(payload: EFactorIn):
     return {"e_factor": round(e, 4)}
 
 
+
 # ---------- Pages ----------
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
