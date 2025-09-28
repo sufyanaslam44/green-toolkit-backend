@@ -29,6 +29,158 @@
 
     <!-- Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- New Reaction → Impact Report -->
+<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="reaction-impact">
+  <div class="flex items-center justify-between gap-3 mb-2">
+    <h2 class="text-xl font-semibold">New Reaction → Impact Report</h2>
+    <button id="load-example" type="button"
+            class="rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-1.5 text-xs font-medium">
+      Load Example (Aspirin)
+    </button>
+  </div>
+  <p class="text-sm text-gray-600 mb-4">
+    Enter reaction details; we’ll compute Atom Economy, PMI, E-factor, Water intensity, and Energy intensity.
+  </p>
+
+  <!-- Form -->
+  <form id="impact-form" class="grid gap-6">
+
+    <!-- Product -->
+    <fieldset class="grid gap-3 border rounded-xl p-4">
+      <legend class="text-sm font-medium px-2">Product</legend>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Name</span>
+          <input id="prod_name" class="border rounded-lg px-3 py-2" placeholder="e.g., aspirin" />
+        </label>
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">MW (g/mol)</span>
+          <input id="prod_mw" type="number" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 180.16" />
+        </label>
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Product mass (g)</span>
+          <input id="prod_mass" type="number" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 10" />
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- Reactants -->
+    <fieldset class="grid gap-3 border rounded-xl p-4">
+      <legend class="text-sm font-medium px-2">Reactants</legend>
+      <div id="reactants" class="grid gap-3"></div>
+      <button id="add-reactant" type="button"
+              class="mt-1 inline-flex items-center rounded-lg bg-emerald-600 text-white text-xs px-3 py-1.5 hover:bg-emerald-700">
+        + Add reactant
+      </button>
+    </fieldset>
+
+    <!-- Solvents -->
+    <fieldset class="grid gap-3 border rounded-xl p-4">
+      <legend class="text-sm font-medium px-2">Solvents</legend>
+      <div id="solvents" class="grid gap-3"></div>
+      <button id="add-solvent" type="button"
+              class="mt-1 inline-flex items-center rounded-lg bg-emerald-600 text-white text-xs px-3 py-1.5 hover:bg-emerald-700">
+        + Add solvent
+      </button>
+      <p class="text-xs text-gray-500">If density is omitted, the tool assumes 1.0 g/mL. Recovery % subtracts that fraction from PMI/E-factor (unless you include recovered solvent in PMI below).</p>
+    </fieldset>
+
+    <!-- Workup & Conditions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <fieldset class="grid gap-3 border rounded-xl p-4">
+        <legend class="text-sm font-medium px-2">Workup</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="grid gap-1">
+            <span class="text-xs text-gray-700">Aqueous washes (mL)</span>
+            <input id="workup_washes" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 100" />
+          </label>
+          <label class="grid gap-1">
+            <span class="text-xs text-gray-700">Drying agents (g)</span>
+            <input id="workup_drying" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 2" />
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="grid gap-3 border rounded-xl p-4">
+        <legend class="text-sm font-medium px-2">Conditions</legend>
+        <div class="grid grid-cols-3 gap-3">
+          <label class="grid gap-1">
+            <span class="text-xs text-gray-700">Mode</span>
+            <select id="cond_mode" class="border rounded-lg px-3 py-2">
+              <option value="hotplate">Hotplate</option>
+              <option value="microwave">Microwave</option>
+              <option value="reflux">Reflux</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="grid gap-1">
+            <span class="text-xs text-gray-700">Time (h)</span>
+            <input id="cond_time" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 1.5" />
+          </label>
+          <label class="grid gap-1">
+            <span class="text-xs text-gray-700">Temp (°C)</span>
+            <input id="cond_temp" type="number" step="any" class="border rounded-lg px-3 py-2" placeholder="optional" />
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- Options -->
+    <div class="flex items-center gap-2">
+      <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
+      <label for="opt_pmi_recovered" class="text-sm text-gray-700">
+        Include recovered solvent in PMI numerator (unchecked = subtract recovered fraction)
+      </label>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3">
+      <button id="compute-impact" type="submit"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+        Compute Impact
+      </button>
+      <span id="impact-error" class="text-sm text-red-600 hidden"></span>
+    </div>
+  </form>
+
+  <!-- Results -->
+  <div id="impact-results" class="mt-6 hidden">
+    <h3 class="text-lg font-semibold mb-3">Impact Report</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="border rounded-xl p-4">
+        <div class="text-xs uppercase text-gray-500">Atom Economy</div>
+        <div id="r_ae" class="text-2xl font-bold">—</div>
+      </div>
+      <div class="border rounded-xl p-4">
+        <div class="text-xs uppercase text-gray-500">PMI</div>
+        <div id="r_pmi" class="text-2xl font-bold">—</div>
+      </div>
+      <div class="border rounded-xl p-4">
+        <div class="text-xs uppercase text-gray-500">E-factor</div>
+        <div id="r_ef" class="text-2xl font-bold">—</div>
+      </div>
+      <div class="border rounded-xl p-4">
+        <div class="text-xs uppercase text-gray-500">Water (L/g)</div>
+        <div id="r_water" class="text-2xl font-bold">—</div>
+      </div>
+      <div class="border rounded-xl p-4">
+        <div class="text-xs uppercase text-gray-500">Energy (kWh/g)</div>
+        <div id="r_energy" class="text-2xl font-bold">—</div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <h4 class="text-sm font-medium mb-2">Breakdown (for audit)</h4>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <tbody id="breakdown-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       <!-- Atom Economy -->
       <section class="rounded-2xl bg-white p-6 shadow-sm border" id="atom-economy">
@@ -213,198 +365,309 @@
   </footer>
 
   <!-- Scripts -->
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+<script>
+  // ---------- Helpers (define ONCE) ----------
+  const $  = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+  const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
+  const show = (n) => n.classList.remove('hidden');
+  const hide = (n) => n.classList.add('hidden');
+  const toNum = (v) => { const n = Number(v); return Number.isFinite(n) ? n : NaN; };
 
-    // --- Utilities ---
-    function show(el) { el.classList.remove('hidden'); }
-    function hide(el) { el.classList.add('hidden'); }
-    function toNum(v) { const n = Number(v); return Number.isFinite(n) ? n : NaN; }
+  // Year in footer
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // --- Atom Economy ---
-    const aeForm = document.getElementById('ae-form');
-    const aeOut = document.getElementById('ae-output');
-    const aeVal = document.getElementById('ae-value');
-    const aeErr = document.getElementById('ae-error');
+  // ---------- Atom Economy ----------
+  (function initAE() {
+    const form = $('#ae-form'); if (!form) return;
+    const out = $('#ae-output'), val = $('#ae-value'), err = $('#ae-error');
 
-    aeForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hide(aeErr);
-
-      const mw_product = toNum(document.getElementById('mw_product').value);
-      const mw_reactants_total = toNum(document.getElementById('mw_reactants_total').value);
-
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      const mw_product = toNum($('#mw_product').value);
+      const mw_reactants_total = toNum($('#mw_reactants_total').value);
       if (!(mw_product > 0) || !(mw_reactants_total > 0)) {
-        aeErr.textContent = 'Please enter positive numbers for both fields.';
-        show(aeErr); return;
+        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
       }
-
       try {
         const res = await fetch('/api/atom-economy', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ mw_product, mw_reactants_total }),
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ mw_product, mw_reactants_total })
         });
         const data = await res.json();
-        if (!res.ok) {
-          aeErr.textContent = data.detail || 'Error calculating Atom Economy.';
-          show(aeErr); return;
-        }
-        aeVal.textContent = Number(data.atom_economy_pct).toFixed(2);
-        show(aeOut);
-      } catch {
-        aeErr.textContent = 'Network error. Is the server running?';
-        show(aeErr);
-      }
+        if (!res.ok) { err.textContent = data.detail || 'Error calculating Atom Economy.'; show(err); return; }
+        val.textContent = Number(data.atom_economy_pct).toFixed(2); show(out);
+      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
     });
+  })();
 
-    // --- E-factor ---
-    const efForm = document.getElementById('ef-form');
-    const efOut = document.getElementById('ef-output');
-    const efVal = document.getElementById('ef-value');
-    const efErr = document.getElementById('ef-error');
+  // ---------- E-factor ----------
+  (function initEF() {
+    const form = $('#ef-form'); if (!form) return;
+    const out = $('#ef-output'), val = $('#ef-value'), err = $('#ef-error');
 
-    efForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hide(efErr);
-
-      const total_mass_in = toNum(document.getElementById('ef_total_in').value);
-      const product_mass = toNum(document.getElementById('ef_product').value);
-
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      const total_mass_in = toNum($('#ef_total_in').value);
+      const product_mass = toNum($('#ef_product').value);
       if (!(total_mass_in > 0) || !(product_mass > 0)) {
-        efErr.textContent = 'Please enter positive numbers for both fields.';
-        show(efErr); return;
+        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
       }
-
       try {
         const res = await fetch('/api/e-factor', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ total_mass_in, product_mass }),
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ total_mass_in, product_mass })
         });
         const data = await res.json();
-        if (!res.ok) {
-          efErr.textContent = data.detail || 'Error calculating E-factor.';
-          show(efErr); return;
+        if (!res.ok) { err.textContent = data.detail || 'Error calculating E-factor.'; show(err); return; }
+        val.textContent = Number(data.e_factor).toFixed(4); show(out);
+      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
+    });
+  })();
+
+  // ---------- PMI ----------
+  (function initPMI() {
+    const form = $('#pmi-form'); if (!form) return;
+    const out = $('#pmi-output'), val = $('#pmi-value'), err = $('#pmi-error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      const total_mass_in = toNum($('#pmi_total_in').value);
+      const product_mass = toNum($('#pmi_product').value);
+      if (!(total_mass_in > 0) || !(product_mass > 0)) {
+        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
+      }
+      try {
+        const res = await fetch('/api/pmi', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ total_mass_in, product_mass })
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.detail || 'Error calculating PMI.'; show(err); return; }
+        val.textContent = Number(data.pmi).toFixed(4); show(out);
+      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
+    });
+  })();
+
+  // ---------- Water Usage ----------
+  (function initWater() {
+    const form = $('#water-form'); if (!form) return;
+    const out = $('#water-output'), err = $('#water-error');
+    const lpg = $('#water-lpg'), lpk = $('#water-lpk');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      const water_liters = toNum($('#water_liters').value);
+      const product_mass_g = toNum($('#water_product_g').value);
+      if (!(water_liters >= 0) || !(product_mass_g > 0)) {
+        err.textContent = 'Enter valid numbers (water ≥ 0, product > 0).'; show(err); return;
+      }
+      try {
+        const res = await fetch('/api/water-impact', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ water_liters, product_mass_g })
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.detail || 'Error calculating water impact.'; show(err); return; }
+        lpg.textContent = Number(data.liters_per_g).toFixed(4);
+        lpk.textContent = Number(data.liters_per_kg).toFixed(2);
+        show(out);
+      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
+    });
+  })();
+
+  // ---------- Energy Use ----------
+  (function initEnergy() {
+    const form = $('#energy-form'); if (!form) return;
+    const out = $('#energy-output'), err = $('#energy-error');
+    const kwhpg = $('#energy-kwhpg'), kwhpk = $('#energy-kwhpk');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      const kwh = toNum($('#energy_kwh').value);
+      const product_mass_g = toNum($('#energy_product_g').value);
+      if (!(kwh >= 0) || !(product_mass_g > 0)) {
+        err.textContent = 'Enter valid numbers (kWh ≥ 0, product > 0).'; show(err); return;
+      }
+      try {
+        const res = await fetch('/api/energy-impact', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ kwh, product_mass_g })
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.detail || 'Error calculating energy impact.'; show(err); return; }
+        kwhpg.textContent = Number(data.kwh_per_g).toFixed(6);
+        kwhpk.textContent = Number(data.kwh_per_kg).toFixed(4);
+        show(out);
+      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
+    });
+  })();
+
+  // ---------- New Reaction → Impact Report ----------
+  (function initImpactForm() {
+    const form = $('#impact-form'); if (!form) return;
+    const err = $('#impact-error');
+    const results = $('#impact-results');
+    const breakdownBody = $('#breakdown-rows');
+
+    const reactantsBox = $('#reactants');
+    const solventsBox  = $('#solvents');
+
+    // builders
+    function reactantRow(data = {}) {
+      const row = el('div', 'grid grid-cols-1 md:grid-cols-3 gap-3 items-end');
+      row.innerHTML = `
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Name</span>
+          <input class="reactant_name border rounded-lg px-3 py-2" placeholder="e.g., salicylic acid" value="${data.name||''}">
+        </label>
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">MW (g/mol)</span>
+          <input type="number" step="any" min="0" class="reactant_mw border rounded-lg px-3 py-2" placeholder="e.g., 138.12" value="${data.mw||''}">
+        </label>
+        <div class="flex gap-3">
+          <label class="flex-1 grid gap-1">
+            <span class="text-xs text-gray-700">Mass (g)</span>
+            <input type="number" step="any" min="0" class="reactant_mass border rounded-lg px-3 py-2" placeholder="e.g., 8.3" value="${data.mass_g||''}">
+          </label>
+          <button type="button" class="remove-reactant rounded-lg border px-3 py-2 text-xs">Remove</button>
+        </div>`;
+      row.querySelector('.remove-reactant').onclick = () => row.remove();
+      return row;
+    }
+    function solventRow(data = {}) {
+      const row = el('div', 'grid grid-cols-1 md:grid-cols-4 gap-3 items-end');
+      row.innerHTML = `
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Name</span>
+          <input class="solv_name border rounded-lg px-3 py-2" placeholder="e.g., ethyl acetate" value="${data.name||''}">
+        </label>
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Volume (mL)</span>
+          <input type="number" step="any" min="0" class="solv_vol border rounded-lg px-3 py-2" placeholder="e.g., 50" value="${data.volume_mL||''}">
+        </label>
+        <label class="grid gap-1">
+          <span class="text-xs text-gray-700">Density (g/mL, optional)</span>
+          <input type="number" step="any" min="0" class="solv_den border rounded-lg px-3 py-2" placeholder="e.g., 0.902" value="${data.density_g_per_mL||''}">
+        </label>
+        <div class="flex gap-3">
+          <label class="flex-1 grid gap-1">
+            <span class="text-xs text-gray-700">Recovery (%)</span>
+            <input type="number" step="any" min="0" max="100" class="solv_rec border rounded-lg px-3 py-2" placeholder="e.g., 60" value="${data.recovery_pct||''}">
+          </label>
+          <button type="button" class="remove-solvent rounded-lg border px-3 py-2 text-xs">Remove</button>
+        </div>`;
+      row.querySelector('.remove-solvent').onclick = () => row.remove();
+      return row;
+    }
+
+    // ensure at least one row each
+    if (!reactantsBox.children.length) reactantsBox.appendChild(reactantRow());
+    if (!solventsBox.children.length)  solventsBox.appendChild(solventRow());
+
+    // add row buttons
+    $('#add-reactant').onclick = () => reactantsBox.appendChild(reactantRow());
+    $('#add-solvent').onclick  = () => solventsBox.appendChild(solventRow());
+
+    // load example
+    $('#load-example').onclick = () => {
+      $('#prod_name').value = 'aspirin';
+      $('#prod_mw').value   = '180.16';
+      $('#prod_mass').value = '10';
+
+      reactantsBox.innerHTML = '';
+      reactantsBox.appendChild(reactantRow({name:'salicylic acid', mw:138.12, mass_g:8.3}));
+      reactantsBox.appendChild(reactantRow({name:'acetic anhydride', mw:102.09, mass_g:12.2}));
+
+      solventsBox.innerHTML = '';
+      solventsBox.appendChild(solventRow({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
+      solventsBox.appendChild(solventRow({name:'water', volume_mL:150, recovery_pct:0}));
+
+      $('#workup_washes').value = '100';
+      $('#workup_drying').value = '2';
+      $('#cond_mode').value = 'hotplate';
+      $('#cond_time').value = '1.5';
+      $('#cond_temp').value = '70';
+      $('#opt_pmi_recovered').checked = false;
+    };
+
+    // build payload
+    function buildPayload() {
+      const product = {
+        name: $('#prod_name').value || null,
+        mw: toNum($('#prod_mw').value),
+        actual_mass_g: toNum($('#prod_mass').value)
+      };
+      const reactants = [...reactantsBox.querySelectorAll(':scope > div')].map(row => ({
+        name: row.querySelector('.reactant_name').value || null,
+        mw: toNum(row.querySelector('.reactant_mw').value),
+        mass_g: toNum(row.querySelector('.reactant_mass').value)
+      })).filter(r => (r.mw > 0 && r.mass_g >= 0));
+      const solvents = [...solventsBox.querySelectorAll(':scope > div')].map(row => ({
+        name: row.querySelector('.solv_name').value || '',
+        volume_mL: toNum(row.querySelector('.solv_vol').value) || 0,
+        density_g_per_mL: toNum(row.querySelector('.solv_den').value) || null,
+        recovery_pct: toNum(row.querySelector('.solv_rec').value) || 0
+      })).filter(s => (s.name && s.volume_mL >= 0));
+      const workup = {
+        aqueous_washes_mL: toNum($('#workup_washes').value) || 0,
+        organic_rinses_mL: 0,
+        drying_agents_g: toNum($('#workup_drying').value) || 0
+      };
+      const conditions = {
+        temp_C: toNum($('#cond_temp').value) || null,
+        time_h: toNum($('#cond_time').value) || 0,
+        mode: $('#cond_mode').value
+      };
+      const options = {
+        count_recovered_solvent_in_pmi: $('#opt_pmi_recovered').checked
+      };
+      return { product, reactants, solvents, workup, conditions, options };
+    }
+
+    // render results
+    function renderResults(data) {
+      $('#r_ae').textContent     = data.atom_economy_pct ?? '—';
+      $('#r_pmi').textContent    = data.pmi ?? '—';
+      $('#r_ef').textContent     = data.e_factor ?? '—';
+      $('#r_water').textContent  = data.water_L_per_g ?? '—';
+      $('#r_energy').textContent = data.energy_kWh_per_g ?? '—';
+
+      breakdownBody.innerHTML = '';
+      Object.entries(data.breakdown || {}).forEach(([k,v]) => {
+        const tr = el('tr');
+        tr.innerHTML = `<td class="py-1 pr-4 text-gray-500">${k}</td><td class="py-1 font-medium">${v}</td>`;
+        breakdownBody.appendChild(tr);
+      });
+      show(results);
+    }
+
+    // submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); hide(err);
+      try {
+        const payload = buildPayload();
+        if (!(payload.product.mw > 0 && payload.product.actual_mass_g > 0)) {
+          err.textContent = 'Product MW and product mass must be > 0.'; show(err); return;
         }
-        efVal.textContent = Number(data.e_factor).toFixed(4);
-        show(efOut);
+        if (!payload.reactants.length) {
+          err.textContent = 'Add at least one reactant with MW and mass.'; show(err); return;
+        }
+        const res = await fetch('/api/impact/compute', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.detail || 'Server error.'; show(err); return; }
+        renderResults(data);
+        window.scrollTo({ top: $('#reaction-impact').offsetTop, behavior: 'smooth' });
       } catch {
-        efErr.textContent = 'Network error. Is the server running?';
-        show(efErr);
+        err.textContent = 'Network error. Is the server running?'; show(err);
       }
     });
-    // --- PMI ---
-  const pmiForm = document.getElementById('pmi-form');
-  const pmiOut = document.getElementById('pmi-output');
-  const pmiVal = document.getElementById('pmi-value');
-  const pmiErr = document.getElementById('pmi-error');
-
-  function show(el){ el.classList.remove('hidden'); }
-  function hide(el){ el.classList.add('hidden'); }
-  function toNum(v){ const n = Number(v); return Number.isFinite(n) ? n : NaN; }
-
-  pmiForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hide(pmiErr);
-
-    const total_mass_in = toNum(document.getElementById('pmi_total_in').value);
-    const product_mass = toNum(document.getElementById('pmi_product').value);
-
-    if (!(total_mass_in > 0) || !(product_mass > 0)) {
-      pmiErr.textContent = 'Please enter positive numbers for both fields.';
-      show(pmiErr); return;
-    }
-
-    try {
-      const res = await fetch('/api/pmi', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ total_mass_in, product_mass }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        pmiErr.textContent = data.detail || 'Error calculating PMI.';
-        show(pmiErr); return;
-      }
-      pmiVal.textContent = Number(data.pmi).toFixed(4);
-      show(pmiOut);
-    } catch {
-      pmiErr.textContent = 'Network error. Is the server running?';
-      show(pmiErr);
-    }
-  });
-  // --- Water Usage ---
-  const wForm = document.getElementById('water-form');
-  const wErr = document.getElementById('water-error');
-  const wOut = document.getElementById('water-output');
-  const wLpg = document.getElementById('water-lpg');
-  const wLpk = document.getElementById('water-lpk');
-
-  wForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); hide(wErr);
-
-    const water_liters = toNum(document.getElementById('water_liters').value);
-    const product_mass_g = toNum(document.getElementById('water_product_g').value);
-
-    if (!(water_liters >= 0) || !(product_mass_g > 0)) {
-      wErr.textContent = 'Enter valid numbers (water ≥ 0, product > 0).';
-      show(wErr); return;
-    }
-
-    try {
-      const res = await fetch('/api/water-impact', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ water_liters, product_mass_g })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        wErr.textContent = data.detail || 'Error calculating water impact.'; show(wErr); return;
-        }
-      wLpg.textContent = Number(data.liters_per_g).toFixed(4);
-      wLpk.textContent = Number(data.liters_per_kg).toFixed(2);
-      show(wOut);
-    } catch {
-      wErr.textContent = 'Network error. Is the server running?'; show(wErr);
-    }
-  });
-
-  // --- Energy Use ---
-  const eForm = document.getElementById('energy-form');
-  const eErr = document.getElementById('energy-error');
-  const eOut = document.getElementById('energy-output');
-  const eKwhpg = document.getElementById('energy-kwhpg');
-  const eKwhpk = document.getElementById('energy-kwhpk');
-
-  eForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); hide(eErr);
-
-    const kwh = toNum(document.getElementById('energy_kwh').value);
-    const product_mass_g = toNum(document.getElementById('energy_product_g').value);
-
-    if (!(kwh >= 0) || !(product_mass_g > 0)) {
-      eErr.textContent = 'Enter valid numbers (kWh ≥ 0, product > 0).';
-      show(eErr); return;
-    }
-
-    try {
-      const res = await fetch('/api/energy-impact', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ kwh, product_mass_g })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        eErr.textContent = data.detail || 'Error calculating energy impact.'; show(eErr); return;
-      }
-      eKwhpg.textContent = Number(data.kwh_per_g).toFixed(6);
-      eKwhpk.textContent = Number(data.kwh_per_kg).toFixed(4);
-      show(eOut);
-    } catch {
-      eErr.textContent = 'Network error. Is the server running?'; show(eErr);
-    }
-  });
-  </script>
+  })();
+</script>
+`
 </body>
 </html>
