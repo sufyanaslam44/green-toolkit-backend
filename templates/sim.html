@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Simulations" }}</title>
+  <meta name="description" content="PhET-style interactive simulation for green chemistry metrics." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    .knob { accent-color: #059669; } /* emerald-600 */
+    .badge { font-size: 10px; border-radius: 9999px; padding: 2px 8px; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <!-- Header -->
+  <header class="bg-white border-b">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <a class="flex items-center gap-2" href="/">
+        <div class="h-8 w-8 rounded-xl bg-emerald-600"></div>
+        <span class="text-xl font-semibold">Green Toolkit</span>
+      </a>
+      <nav class="flex gap-4 text-sm">
+        <a class="hover:text-emerald-700" href="/">Home</a>
+        <a class="hover:text-emerald-700" href="/tools">Tools</a>
+        <a class="text-emerald-700 font-medium" href="/simulate">Simulations</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Left: Controls -->
+    <section class="rounded-2xl bg-white p-5 shadow-sm border md:col-span-1">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-semibold">PhET-style Controls</h1>
+        <button id="load-example" class="text-xs rounded-md bg-gray-100 px-3 py-1.5 hover:bg-gray-200">Load Aspirin</button>
+      </div>
+      <p class="text-xs text-gray-600 mt-1">Tweak variables; visuals update instantly.</p>
+
+      <!-- Product -->
+      <div class="mt-4">
+        <h2 class="text-sm font-medium mb-2">Product</h2>
+        <label class="text-xs text-gray-700">Name</label>
+        <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
+        <div class="grid grid-cols-2 gap-3">
+          <label class="grid">
+            <span class="text-xs text-gray-700">MW (g/mol)</span>
+            <input id="prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="180.16">
+          </label>
+          <label class="grid">
+            <span class="text-xs text-gray-700">Mass (g)</span>
+            <input id="prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="10">
+          </label>
+        </div>
+      </div>
+
+      <!-- Reactants (compact card list) -->
+      <div class="mt-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-medium">Reactants</h2>
+          <button id="add-reactant" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+        </div>
+        <div id="reactants" class="mt-2 grid gap-2"></div>
+      </div>
+
+      <!-- Solvents (compact card list) -->
+      <div class="mt-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-medium">Solvents</h2>
+          <button id="add-solvent" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+        </div>
+        <div id="solvents" class="mt-2 grid gap-2"></div>
+      </div>
+
+      <!-- Workup + Conditions (sliders like PhET) -->
+      <div class="mt-5 grid gap-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium">Aqueous washes (mL)</label>
+            <span id="lbl_washes" class="text-xs text-gray-500">0 mL</span>
+          </div>
+          <input id="workup_washes" class="w-full knob" type="range" min="0" max="500" value="0">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium">Drying agents (g)</label>
+            <span id="lbl_drying" class="text-xs text-gray-500">0 g</span>
+          </div>
+          <input id="workup_drying" class="w-full knob" type="range" min="0" max="10" value="0" step="0.1">
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <label class="grid">
+            <span class="text-sm font-medium">Mode</span>
+            <select id="cond_mode" class="border rounded-lg px-2 py-2">
+              <option value="hotplate">🔥 Hotplate</option>
+              <option value="microwave">⚡ Microwave</option>
+              <option value="reflux">♻ Reflux</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="grid">
+            <span class="text-sm font-medium">Time (h)</span>
+            <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
+            <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
+          </label>
+          <label class="grid">
+            <span class="text-sm font-medium">Temp (°C)</span>
+            <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
+            <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
+          </label>
+        </div>
+
+        <label class="inline-flex items-center gap-2">
+          <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
+          <span class="text-xs">Include recovered solvent in PMI numerator</span>
+        </label>
+      </div>
+
+      <div class="mt-5 flex items-center gap-2">
+        <button id="simulate" class="rounded-lg bg-emerald-600 text-white px-4 py-2 text-sm hover:bg-emerald-700">Run Simulation</button>
+        <button id="reset" class="rounded-lg bg-gray-200 px-4 py-2 text-sm hover:bg-gray-300">Reset</button>
+        <span id="sim-error" class="text-xs text-red-600 hidden"></span>
+      </div>
+    </section>
+
+    <!-- Right: Visuals -->
+    <section class="rounded-2xl bg-white p-5 shadow-sm border md:col-span-2">
+      <div class="grid gap-4 md:grid-cols-2">
+        <!-- Metric bars -->
+        <div class="border rounded-xl p-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-medium">Impact Metrics</h2>
+            <div class="flex gap-1">
+              <span class="badge bg-green-100 text-green-800">good</span>
+              <span class="badge bg-yellow-100 text-yellow-800">ok</span>
+              <span class="badge bg-red-100 text-red-800">needs work</span>
+            </div>
+          </div>
+          <canvas id="metricsChart" class="mt-4"></canvas>
+        </div>
+
+        <!-- Sankey -->
+        <div class="border rounded-xl p-4">
+          <h2 class="text-sm font-medium">Mass Flow</h2>
+          <div id="sankey" class="mt-4"></div>
+        </div>
+
+        <!-- Beaker animation -->
+        <div class="border rounded-xl p-4 md:col-span-2">
+          <h2 class="text-sm font-medium">Beaker (Product vs Waste vs Recovered)</h2>
+          <div class="mt-3 flex items-end gap-6">
+            <svg id="beaker" width="220" height="180">
+              <!-- simple beaker outline -->
+              <rect x="10" y="10" width="200" height="160" rx="8" ry="8" fill="none" stroke="#374151" stroke-width="2"/>
+              <!-- fills -->
+              <rect id="fill-recovered" x="12" y="168" width="196" height="0" fill="#A7F3D0"></rect>
+              <rect id="fill-waste"     x="12" y="168" width="196" height="0" fill="#FECACA"></rect>
+              <rect id="fill-product"   x="12" y="168" width="196" height="0" fill="#93C5FD"></rect>
+            </svg>
+            <div class="text-xs text-gray-600">
+              <div><span class="inline-block w-3 h-3 mr-2" style="background:#93C5FD"></span>Product</div>
+              <div><span class="inline-block w-3 h-3 mr-2" style="background:#FECACA"></span>Waste (non-recovered)</div>
+              <div><span class="inline-block w-3 h-3 mr-2" style="background:#A7F3D0"></span>Recovered solvent</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw numbers -->
+      <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-sm">
+        <div class="border rounded-lg p-3">
+          <div class="text-gray-500 text-xs">Atom Economy</div>
+          <div id="r_ae" class="text-2xl font-semibold">—</div>
+        </div>
+        <div class="border rounded-lg p-3">
+          <div class="text-gray-500 text-xs">PMI</div>
+          <div id="r_pmi" class="text-2xl font-semibold">—</div>
+        </div>
+        <div class="border rounded-lg p-3">
+          <div class="text-gray-500 text-xs">E-factor</div>
+          <div id="r_ef" class="text-2xl font-semibold">—</div>
+        </div>
+        <div class="border rounded-lg p-3">
+          <div class="text-gray-500 text-xs">Water (L/g)</div>
+          <div id="r_water" class="text-2xl font-semibold">—</div>
+        </div>
+        <div class="border rounded-lg p-3">
+          <div class="text-gray-500 text-xs">Energy (kWh/g)</div>
+          <div id="r_energy" class="text-2xl font-semibold">—</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-10 border-t">
+    <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
+      © <span id="year"></span> Green Toolkit • Simulations
+    </div>
+  </footer>
+
+  <!-- Logic -->
+  <script>
+    // Helpers
+    const $  = (sel) => document.querySelector(sel);
+    const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
+    const toNum = (v) => { const n = Number(v); return Number.isFinite(n) ? n : NaN; };
+    const setTxt = (id, t) => { const e = $(id); if (e) e.textContent = t; };
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Reactant / solvent compact cards
+    const reactantsBox = $('#reactants');
+    const solventsBox = $('#solvents');
+
+    function reactantCard(data={}) {
+      const card = el('div', 'border rounded-lg p-2 grid grid-cols-3 gap-2 items-end');
+      card.innerHTML = `
+        <input class="r_name border rounded px-2 py-1 text-xs" placeholder="name" value="${data.name||''}">
+        <input class="r_mw border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
+        <div class="flex gap-2">
+          <input class="r_mass flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
+          <button type="button" class="rmv rounded border px-2 text-xs">x</button>
+        </div>`;
+      card.querySelector('.rmv').onclick = () => card.remove();
+      return card;
+    }
+
+    function solventCard(data={}) {
+      const card = el('div', 'border rounded-lg p-2 grid grid-cols-4 gap-2 items-end');
+      card.innerHTML = `
+        <input class="s_name border rounded px-2 py-1 text-xs" placeholder="solvent" value="${data.name||''}">
+        <input class="s_vol border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mL" value="${data.volume_mL||''}">
+        <input class="s_den border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="density g/mL" value="${data.density_g_per_mL||''}">
+        <div class="flex gap-2">
+          <input class="s_rec flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" max="100" placeholder="% rec" value="${data.recovery_pct||''}">
+          <button type="button" class="rmv rounded border px-2 text-xs">x</button>
+        </div>`;
+      card.querySelector('.rmv').onclick = () => card.remove();
+      return card;
+    }
+
+    // Add default cards
+    if (!reactantsBox.children.length) reactantsBox.appendChild(reactantCard());
+    if (!solventsBox.children.length)  solventsBox.appendChild(solventCard());
+
+    // Add buttons
+    $('#add-reactant').onclick = () => reactantsBox.appendChild(reactantCard());
+    $('#add-solvent').onclick  = () => solventsBox.appendChild(solventCard());
+
+    // Labels for sliders
+    function bindLabel(inputId, labelId, suffix) {
+      const input = document.getElementById(inputId);
+      const label = document.getElementById(labelId);
+      if (!input || !label) return;
+      const upd = () => label.textContent = `${input.value} ${suffix}`;
+      input.addEventListener('input', upd); upd();
+    }
+    bindLabel('workup_washes', 'lbl_washes', 'mL');
+    bindLabel('workup_drying', 'lbl_drying', 'g');
+    bindLabel('cond_time', 'lbl_time', 'h');
+    bindLabel('cond_temp', 'lbl_temp', '°C');
+
+    // Example
+    $('#load-example').onclick = () => {
+      $('#prod_name').value = 'aspirin';
+      $('#prod_mw').value = '180.16';
+      $('#prod_mass').value = '10';
+
+      reactantsBox.innerHTML = '';
+      reactantsBox.appendChild(reactantCard({name:'salicylic acid', mw:138.12, mass_g:8.3}));
+      reactantsBox.appendChild(reactantCard({name:'acetic anhydride', mw:102.09, mass_g:12.2}));
+
+      solventsBox.innerHTML = '';
+      solventsBox.appendChild(solventCard({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
+      solventsBox.appendChild(solventCard({name:'water', volume_mL:150, recovery_pct:0}));
+
+      document.getElementById('workup_washes').value = 100;
+      document.getElementById('workup_drying').value = 2;
+      document.getElementById('cond_mode').value = 'hotplate';
+      document.getElementById('cond_time').value = 1.5; document.getElementById('lbl_time').textContent = '1.5 h';
+      document.getElementById('cond_temp').value = 70;  document.getElementById('lbl_temp').textContent = '70 °C';
+      document.getElementById('opt_pmi_recovered').checked = false;
+    };
+
+    // Build payload from UI
+    function buildPayload() {
+      const product = {
+        name: $('#prod_name').value || null,
+        mw: toNum($('#prod_mw').value),
+        actual_mass_g: toNum($('#prod_mass').value)
+      };
+      const reactants = [...reactantsBox.children].map(r => ({
+        name: r.querySelector('.r_name').value || null,
+        mw: toNum(r.querySelector('.r_mw').value),
+        mass_g: toNum(r.querySelector('.r_mass').value)
+      })).filter(x => (x.mw > 0 && x.mass_g >= 0));
+      const solvents = [...solventsBox.children].map(s => ({
+        name: s.querySelector('.s_name').value || '',
+        volume_mL: toNum(s.querySelector('.s_vol').value) || 0,
+        density_g_per_mL: toNum(s.querySelector('.s_den').value) || null,
+        recovery_pct: toNum(s.querySelector('.s_rec').value) || 0
+      })).filter(x => x.name && x.volume_mL >= 0);
+      const workup = {
+        aqueous_washes_mL: toNum($('#workup_washes').value) || 0,
+        organic_rinses_mL: 0,
+        drying_agents_g: toNum($('#workup_drying').value) || 0
+      };
+      const conditions = {
+        temp_C: toNum($('#cond_temp').value) || null,
+        time_h: toNum($('#cond_time').value) || 0,
+        mode: $('#cond_mode').value
+      };
+      const options = {
+        count_recovered_solvent_in_pmi: $('#opt_pmi_recovered').checked
+      };
+      return { product, reactants, solvents, workup, conditions, options };
+    }
+
+    // Metrics chart
+    let metricsChart;
+    function drawMetricsChart(data) {
+      const labels = ['PMI','E-factor','Water (L/g)','Energy (kWh/g)'];
+      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_L_per_g ?? null, data.energy_kWh_per_g ?? null];
+      const ctx = document.getElementById('metricsChart').getContext('2d');
+      if (metricsChart) {
+        metricsChart.data.datasets[0].data = values;
+        metricsChart.update(); return;
+      }
+      metricsChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Impact', data: values }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    // Sankey
+    function drawSankey(data) {
+      const b = data.breakdown || {};
+      const reactants   = b.reactant_mass_g || 0;
+      const solventTot  = b.solvent_mass_total_g || 0;
+      const solventNonR = b.solvent_mass_nonrecovered_g || 0;
+      const solventRec  = Math.max(solventTot - solventNonR, 0);
+      const aux         = b.auxiliaries_g || 0;
+      const product     = b.product_mass_g || 0;
+      const waste       = Math.max((b.pmi_numerator_g || 0) - product, 0);
+
+      const nodes = ['Reactants','Solvent (rec)','Solvent (non-rec)','Auxiliaries','Product','Waste'];
+      const idx = (n) => nodes.indexOf(n);
+      const links = [
+        {s:'Reactants',t:'Product',v:Math.min(product,reactants)},
+        {s:'Reactants',t:'Waste',  v:Math.max(reactants - Math.min(product,reactants),0)},
+        {s:'Solvent (non-rec)',t:'Waste',v:solventNonR},
+        {s:'Solvent (rec)',t:'Waste',v:0},
+        {s:'Auxiliaries',t:'Waste',v:aux}
+      ];
+
+      Plotly.newPlot('sankey', [{
+        type: 'sankey',
+        orientation: 'h',
+        node: { label: nodes },
+        link: { source: links.map(l=>idx(l.s)), target: links.map(l=>idx(l.t)), value: links.map(l=>l.v) }
+      }], { margin: {t:10,b:10,l:10,r:10} }, { displayModeBar:false });
+    }
+
+    // Beaker fill animation (very simple proportional heights)
+    function drawBeaker(data) {
+      const b = data.breakdown || {};
+      const product = b.product_mass_g || 0;
+      const nonrec  = Math.max((b.pmi_numerator_g || 0) - product, 0);
+      const recSolv = Math.max((b.solvent_mass_total_g || 0) - (b.solvent_mass_nonrecovered_g || 0), 0);
+
+      const total = product + nonrec + recSolv || 1;
+      const H = 156; const y0 = 12; // inner height & top offset
+
+      function setRect(id, frac, order) {
+        const h = Math.max(frac * H, 0);
+        const y = y0 + H - h - order; // stack from bottom upwards
+        const r = document.getElementById(id);
+        r.setAttribute('y', y);
+        r.setAttribute('height', h);
+      }
+      setRect('fill-product',   product/total, 0);
+      setRect('fill-waste',     nonrec/total,  (product/total)*H);
+      setRect('fill-recovered', recSolv/total, ((product+nonrec)/total)*H);
+    }
+
+    // Render all UI outputs
+    function renderAll(data) {
+      // number cards
+      setTxt('#r_ae',     data.atom_economy_pct ?? '—');
+      setTxt('#r_pmi',    data.pmi ?? '—');
+      setTxt('#r_ef',     data.e_factor ?? '—');
+      setTxt('#r_water',  data.water_L_per_g ?? '—');
+      setTxt('#r_energy', data.energy_kWh_per_g ?? '—');
+
+      // visuals
+      drawMetricsChart(data);
+      drawSankey(data);
+      drawBeaker(data);
+    }
+
+    // Run simulation
+    async function runSim() {
+      const err = document.getElementById('sim-error');
+      err.classList.add('hidden'); err.textContent = '';
+
+      const payload = buildPayload();
+      if (!(payload.product.mw > 0 && payload.product.actual_mass_g > 0)) {
+        err.textContent = 'Product MW and mass must be > 0.'; err.classList.remove('hidden'); return;
+      }
+      if (!payload.reactants.length) {
+        err.textContent = 'Add at least one reactant with MW and mass.'; err.classList.remove('hidden'); return;
+      }
+
+      try {
+        const res = await fetch('/api/impact/compute', {
+          method: 'POST', headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
+        renderAll(data);
+      } catch {
+        err.textContent = 'Network error. Is the server running?'; err.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('simulate').onclick = runSim;
+    document.getElementById('reset').onclick = () => location.reload();
+  </script>
+</body>
+</html>
