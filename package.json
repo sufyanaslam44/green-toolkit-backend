@@ -1,0 +1,25 @@
+{
+  "name": "green-toolkit-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sufyanaslam44/green-toolkit-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sufyanaslam44/green-toolkit-backend/issues"
+  },
+  "homepage": "https://github.com/sufyanaslam44/green-toolkit-backend#readme",
+  "devDependencies": {
+    "eslint": "^9.36.0",
+    "eslint-plugin-html": "^8.1.3"
+  }
+}
