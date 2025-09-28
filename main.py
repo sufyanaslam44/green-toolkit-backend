@@ -32,6 +32,21 @@ def calc_atom_economy(payload: AtomEconomyIn):
         raise HTTPException(status_code=400, detail="Product MW cannot exceed sum of reactants MW.")
     ae = (payload.mw_product / payload.mw_reactants_total) * 100.0
     return {"atom_economy_pct": round(ae, 2)}
+# ---------- E-factor API ----------
+class EFactorIn(BaseModel):
+    total_mass_in: float = Field(gt=0, description="Total mass of inputs (g)")
+    product_mass: float = Field(gt=0, description="Mass of desired product (g)")
+
+class EFactorOut(BaseModel):
+    e_factor: float
+
+@app.post("/api/e-factor", response_model=EFactorOut)
+def calc_e_factor(payload: EFactorIn):
+    if payload.total_mass_in < payload.product_mass:
+        raise HTTPException(status_code=400, detail="Total mass in must be ≥ product mass.")
+    e = (payload.total_mass_in - payload.product_mass) / payload.product_mass
+    return {"e_factor": round(e, 4)}
+
 
 # ---------- Pages ----------
 @app.get("/", response_class=HTMLResponse)

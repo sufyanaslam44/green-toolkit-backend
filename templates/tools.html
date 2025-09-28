@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ title or "Tools & Calculators" }}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <meta name="description" content="Atom Economy, PMI, E-factor and sustainability calculators for green chemistry." />
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900">
   <!-- Header -->
@@ -22,74 +22,129 @@
     </div>
   </header>
 
+  <!-- Main -->
   <main class="mx-auto max-w-6xl px-4 py-10">
-    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">Tools & Calculators</h1>
-    <p class="text-gray-600 mb-8">
-      Quick calculators to estimate sustainability metrics.
-    </p>
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Tools & Calculators</h1>
+    <p class="text-gray-600 mb-8">Quick calculators to estimate sustainability metrics for reactions.</p>
 
-    <!-- Atom Economy -->
-    <section class="rounded-2xl bg-white p-6 shadow-sm border" id="atom-economy">
-      <h2 class="text-xl font-semibold mb-2">Atom Economy</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        AE (%) = (MW of desired product / Sum of MW of all reactants) × 100
-      </p>
+    <!-- Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <form id="ae-form" class="grid gap-3 max-w-md">
-        <label class="grid gap-1">
-          <span class="text-sm text-gray-700">Product MW (g/mol)</span>
-          <input type="number" id="mw_product" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 30.5" />
-        </label>
-        <label class="grid gap-1">
-          <span class="text-sm text-gray-700">Total Reactants MW (g/mol)</span>
-          <input type="number" id="mw_reactants_total" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 50.8" />
-        </label>
+      <!-- Atom Economy -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="atom-economy">
+        <h2 class="text-xl font-semibold mb-2">Atom Economy</h2>
+        <p class="text-sm text-gray-600 mb-4">
+          <span class="font-medium">Formula:</span> AE (%) = (MW of desired product / Σ MW of reactants) × 100
+        </p>
 
-        <div class="flex items-center gap-3 mt-2">
-          <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-            Calculate
-          </button>
-          <span id="ae-output" class="text-sm text-gray-800 hidden">
-            <strong>Atom Economy:</strong> <span id="ae-value">—</span> %
-          </span>
-        </div>
-      </form>
-    </section>
+        <form id="ae-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Product MW (g/mol)</span>
+            <input type="number" id="mw_product" step="any" min="0" required
+                   class="border rounded-lg px-3 py-2"
+                   placeholder="e.g., 180.16" />
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Total Reactants MW (g/mol)</span>
+            <input type="number" id="mw_reactants_total" step="any" min="0" required
+                   class="border rounded-lg px-3 py-2"
+                   placeholder="e.g., 342.30" />
+          </label>
 
-    <!-- PMI (placeholder) -->
-    <section class="rounded-2xl bg-white p-6 shadow-sm border mt-8" id="pmi">
-      <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
-      <p class="text-sm text-gray-600">
-        Coming soon: PMI = Total mass in / Product mass. We’ll add inputs for product mass, reagents, and solvents.
-      </p>
-    </section>
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit"
+                    class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+              Calculate
+            </button>
+            <span id="ae-output" class="text-sm text-gray-800 hidden">
+              <strong>Atom Economy:</strong> <span id="ae-value">—</span> %
+            </span>
+          </div>
 
-    <!-- E-factor (placeholder) -->
-    <section class="rounded-2xl bg-white p-6 shadow-sm border mt-8" id="efactor">
-      <h2 class="text-xl font-semibold mb-2">E-factor</h2>
-      <p class="text-sm text-gray-600">
-        Coming soon: E-factor = (Total mass in – Product mass) / Product mass. We’ll include fields for waste streams and solvent recovery.
-      </p>
-    </section>
+          <p id="ae-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
+
+      <!-- E-factor -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="efactor">
+        <h2 class="text-xl font-semibold mb-2">E-factor</h2>
+        <p class="text-sm text-gray-600 mb-4">
+          <span class="font-medium">Formula:</span> E-factor = (Total mass of waste generated / Mass of isolated product)
+        </p>
+
+        <form id="ef-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Total mass of waste generated (g)</span>
+            <input type="number" id="ef_total_in" step="any" min="0" required
+                   class="border rounded-lg px-3 py-2"
+                   placeholder="e.g., 150" />
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Mass of isolated product (g)</span>
+            <input type="number" id="ef_product" step="any" min="0" required
+                   class="border rounded-lg px-3 py-2"
+                   placeholder="e.g., 30" />
+          </label>
+
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit"
+                    class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
+              Calculate
+            </button>
+            <span id="ef-output" class="text-sm text-gray-800 hidden">
+              <strong>E-factor:</strong> <span id="ef-value">—</span>
+            </span>
+          </div>
+
+          <p id="ef-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
+
+      <!-- PMI (placeholder) -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="pmi">
+        <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
+        <p class="text-sm text-gray-600">
+          Coming soon: PMI = Total mass in / Product mass. We’ll add inputs for product mass, reagents, and solvents,
+          plus toggles for solvent recovery to reflect realistic processes.
+        </p>
+      </section>
+
+    </div>
   </main>
 
+  <!-- Footer -->
   <footer class="mt-12 border-t">
     <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
       © <span id="year"></span> Green Toolkit • Tools & Calculators
     </div>
   </footer>
 
+  <!-- Scripts -->
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    const form = document.getElementById('ae-form');
-    const output = document.getElementById('ae-output');
-    const valueEl = document.getElementById('ae-value');
+    // --- Utilities ---
+    function show(el) { el.classList.remove('hidden'); }
+    function hide(el) { el.classList.add('hidden'); }
+    function toNum(v) { const n = Number(v); return Number.isFinite(n) ? n : NaN; }
 
-    form.addEventListener('submit', async (e) => {
+    // --- Atom Economy ---
+    const aeForm = document.getElementById('ae-form');
+    const aeOut = document.getElementById('ae-output');
+    const aeVal = document.getElementById('ae-value');
+    const aeErr = document.getElementById('ae-error');
+
+    aeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const mw_product = parseFloat(document.getElementById('mw_product').value);
-      const mw_reactants_total = parseFloat(document.getElementById('mw_reactants_total').value);
+      hide(aeErr);
+
+      const mw_product = toNum(document.getElementById('mw_product').value);
+      const mw_reactants_total = toNum(document.getElementById('mw_reactants_total').value);
+
+      if (!(mw_product > 0) || !(mw_reactants_total > 0)) {
+        aeErr.textContent = 'Please enter positive numbers for both fields.';
+        show(aeErr); return;
+      }
 
       try {
         const res = await fetch('/api/atom-economy', {
@@ -99,13 +154,51 @@
         });
         const data = await res.json();
         if (!res.ok) {
-          alert(data.detail || 'Error calculating Atom Economy');
-          return;
+          aeErr.textContent = data.detail || 'Error calculating Atom Economy.';
+          show(aeErr); return;
         }
-        valueEl.textContent = Number(data.atom_economy_pct).toFixed(2);
-        output.classList.remove('hidden');
-      } catch (err) {
-        alert('Network error. Is the server running?');
+        aeVal.textContent = Number(data.atom_economy_pct).toFixed(2);
+        show(aeOut);
+      } catch {
+        aeErr.textContent = 'Network error. Is the server running?';
+        show(aeErr);
+      }
+    });
+
+    // --- E-factor ---
+    const efForm = document.getElementById('ef-form');
+    const efOut = document.getElementById('ef-output');
+    const efVal = document.getElementById('ef-value');
+    const efErr = document.getElementById('ef-error');
+
+    efForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hide(efErr);
+
+      const total_mass_in = toNum(document.getElementById('ef_total_in').value);
+      const product_mass = toNum(document.getElementById('ef_product').value);
+
+      if (!(total_mass_in > 0) || !(product_mass > 0)) {
+        efErr.textContent = 'Please enter positive numbers for both fields.';
+        show(efErr); return;
+      }
+
+      try {
+        const res = await fetch('/api/e-factor', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ total_mass_in, product_mass }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          efErr.textContent = data.detail || 'Error calculating E-factor.';
+          show(efErr); return;
+        }
+        efVal.textContent = Number(data.e_factor).toFixed(4);
+        show(efOut);
+      } catch {
+        efErr.textContent = 'Network error. Is the server running?';
+        show(efErr);
       }
     });
   </script>
