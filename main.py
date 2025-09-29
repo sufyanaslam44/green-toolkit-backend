@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict, Any
 from pathlib import Path
+from math import isfinite
 import os
 
 # ------------------------------------------------------------------------------
@@ -128,6 +129,69 @@ def calc_energy_impact(payload: EnergyImpactIn):
     kwhpg = payload.kwh / payload.product_mass_g
     kwhpk = kwhpg * 1000.0
     return {"kwh_per_g": round(kwhpg, 6), "kwh_per_kg": round(kwhpk, 4)}
+# ------------------------------- RME API --------------------------------------
+class RMEIn(BaseModel):
+    reactant_masses_g: List[float] = Field(min_items=1, description="List of reactant masses (g)")
+    product_mass_g: float = Field(gt=0, description="Isolated product mass (g)")
+
+class RMEOut(BaseModel):
+    rme_pct: float
+
+@app.post("/api/rme", response_model=RMEOut)
+def calc_rme(payload: RMEIn):
+    total_reactants = sum(m for m in payload.reactant_masses_g if m is not None)
+    if total_reactants <= 0:
+        raise HTTPException(status_code=400, detail="Total reactant mass must be > 0.")
+    rme = (payload.product_mass_g / total_reactants) * 100.0
+    return {"rme_pct": round(rme, 2)}
+
+# ------------------------ Carbon Efficiency API -------------------------------
+class CarbonInSpecies(BaseModel):
+    mass_g: float = Field(ge=0)
+    mw: float = Field(gt=0)
+    carbon_atoms: int = Field(ge=0)
+
+class CarbonEfficiencyIn(BaseModel):
+    product: CarbonInSpecies
+    reactants: List[CarbonInSpecies] = Field(min_items=1)
+
+class CarbonEfficiencyOut(BaseModel):
+    carbon_efficiency_pct: float
+
+@app.post("/api/carbon-efficiency", response_model=CarbonEfficiencyOut)
+def calc_carbon_efficiency(payload: CarbonEfficiencyIn):
+    nP = payload.product.mass_g / payload.product.mw
+    totalC_in = sum((r.mass_g / r.mw) * r.carbon_atoms for r in payload.reactants)
+    totalC_out = nP * payload.product.carbon_atoms
+    if totalC_in <= 0:
+        raise HTTPException(status_code=400, detail="Total carbon-in must be > 0.")
+    ce = (totalC_out / totalC_in) * 100.0
+    return {"carbon_efficiency_pct": round(ce, 2)}
+
+# ------------------------ Stoichiometric Factor API ---------------------------
+class SFEntry(BaseModel):
+    name: Optional[str] = None
+    eq_used: float = Field(ge=0)
+    eq_stoich: float = Field(gt=0)
+
+class StoichiometricFactorIn(BaseModel):
+    species: List[SFEntry] = Field(min_items=1)
+
+class StoichiometricFactorOut(BaseModel):
+    sf_overall: float
+    details: List[Dict[str, float]]
+
+@app.post("/api/stoichiometric-factor", response_model=StoichiometricFactorOut)
+def calc_stoichiometric_factor(payload: StoichiometricFactorIn):
+    used = sum(s.eq_used for s in payload.species)
+    req  = sum(s.eq_stoich for s in payload.species)
+    if req <= 0:
+        raise HTTPException(status_code=400, detail="Sum of stoichiometric equivalents must be > 0.")
+    overall = used / req
+    details = [{"name": s.name or f"species_{i+1}", "excess_ratio": round(s.eq_used / s.eq_stoich, 4)} 
+               for i, s in enumerate(payload.species)]
+    return {"sf_overall": round(overall, 4), "details": details}
+
 
 # ------------------------------------------------------------------------------
 # Reaction Impact Report (single JSON -> all metrics)
@@ -137,12 +201,16 @@ class Product(BaseModel):
     smiles: Optional[str] = None
     mw: float = Field(gt=0, description="Molecular weight of desired product (g/mol)")
     actual_mass_g: float = Field(gt=0, description="Isolated product mass (g)")
+    carbon_atoms: Optional[int] = Field(default=None, ge=0, description="Number of carbon atoms in product molecule")
 
 class Reactant(BaseModel):
     name: Optional[str] = None
     smiles: Optional[str] = None
     mw: float = Field(gt=0, description="Molecular weight (g/mol)")
     mass_g: float = Field(ge=0, description="Mass charged (g)")
+    carbon_atoms: Optional[int] = Field(default=None, ge=0, description="Number of carbon atoms per molecule")
+    eq_used: Optional[float]   = Field(default=None, ge=0, description="Equivalents actually used vs limiting reagent = 1")
+    eq_stoich: Optional[float] = Field(default=None, gt=0, description="Stoichiometric equivalents required by balanced equation")
 
 class Solvent(BaseModel):
     name: str
@@ -185,8 +253,15 @@ class ReactionImpactOut(BaseModel):
     e_factor: Optional[float]
     water_L_per_g: Optional[float]
     energy_kWh_per_g: Optional[float]
+    # NEW (optional Phase-1 metrics)
+    rme_pct: Optional[float] = None
+    carbon_efficiency_pct: Optional[float] = None
+    sf_overall: Optional[float] = None
+    sf_details: Optional[List[Dict[str, float]]] = None
     breakdown: Dict[str, Any]
-    ai_suggestions: List[str] = []  # placeholder for future AI
+    ai_suggestions: List[str] = []
+
+
 
 def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     if not payload.reactants:
@@ -258,14 +333,62 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
         }
     }
 
+    # --- RME: product mass / (sum of reactant masses consumed) ---
+    rme_pct = None
+    reactant_mass_g = sum(r.mass_g for r in payload.reactants)  # already computed above
+    if product_mass_g > 0 and reactant_mass_g > 0:
+        rme_pct = round((product_mass_g / reactant_mass_g) * 100.0, 2)
+
+    # --- Carbon Efficiency ---
+    # definition: (n_product * C_product) / sum(n_reactant_i * C_reactant_i) * 100
+    # n_i (moles) = mass_g / MW ; requires carbon_atoms for product & reactants
+    carbon_efficiency_pct = None
+    try:
+        if payload.product.carbon_atoms is not None and all(
+            r.carbon_atoms is not None for r in payload.reactants
+        ):
+            nP = payload.product.actual_mass_g / payload.product.mw
+            totalC_in = 0.0
+            for r in payload.reactants:
+                nR = r.mass_g / r.mw
+                totalC_in += nR * r.carbon_atoms
+            totalC_out = nP * payload.product.carbon_atoms
+            if totalC_in > 0:
+                carbon_efficiency_pct = round((totalC_out / totalC_in) * 100.0, 2)
+    except Exception:
+        pass  # keep None if inputs invalid
+
+    # --- Stoichiometric Factor (overall & per-reactant excess) ---
+    # For each reactant with eq_used & eq_stoich, compute ratio = eq_used / eq_stoich
+    # Overall SF = (Σ eq_used) / (Σ eq_stoich)
+    sf_overall = None
+    sf_details = None
+    try:
+        pairs = [(r.name or f"reactant_{i+1}", r.eq_used, r.eq_stoich) for i, r in enumerate(payload.reactants)]
+        pairs = [(n, eu, es) for (n, eu, es) in pairs if (eu is not None and es is not None and es > 0)]
+        if pairs:
+            per = [{"name": n, "excess_ratio": round(eu / es, 4)} for (n, eu, es) in pairs if isfinite(eu / es)]
+            sum_used = sum(eu for (_, eu, es) in pairs)
+            sum_req  = sum(es for (_, eu, es) in pairs)
+            if sum_req > 0:
+                sf_overall = round(sum_used / sum_req, 4)
+                sf_details = per
+    except Exception:
+        pass
+
+    # breakdown already defined above; just return extended fields:
     return ReactionImpactOut(
         atom_economy_pct = round(atom_economy, 2) if atom_economy is not None else None,
         pmi = round(pmi, 3),
         e_factor = round(e_factor, 3),
         water_L_per_g = round(water_L_per_g, 4),
         energy_kWh_per_g = round(energy_kWh_per_g, 6) if energy_kWh_per_g is not None else None,
+        rme_pct = rme_pct,
+        carbon_efficiency_pct = carbon_efficiency_pct,
+        sf_overall = sf_overall,
+        sf_details = sf_details,
         breakdown = breakdown,
-        ai_suggestions = []  # to be filled later by AI module
+        ai_suggestions = []
     )
 
 @app.post("/api/impact/compute", response_model=ReactionImpactOut)

@@ -44,7 +44,7 @@
         <h2 class="text-sm font-medium mb-2">Product</h2>
         <label class="text-xs text-gray-700">Name</label>
         <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <label class="grid">
             <span class="text-xs text-gray-700">MW (g/mol)</span>
             <input id="prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="180.16">
@@ -53,6 +53,12 @@
             <span class="text-xs text-gray-700">Mass (g)</span>
             <input id="prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="10">
           </label>
+          <!-- add below Product Mass -->
+<label class="grid">
+  <span class="text-xs text-gray-700">Product carbon atoms (optional)</span>
+  <input id="prod_carbon" type="number" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 9">
+</label>
+
         </div>
       </div>
 
@@ -63,6 +69,13 @@
           <button id="add-reactant" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
         </div>
         <div id="reactants" class="mt-2 grid gap-2"></div>
+        <!-- inside reactantCard(data) template string, after mass -->
+<input class="r_c  ..." type="number" min="0"     placeholder="C atoms"  value="${data.carbon_atoms||''}">
+<input class="r_eu ..." type="number" step="any" min="0" placeholder="eq used"  value="${data.eq_used||''}">
+<input class="r_es ..." type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
+
+
+
       </div>
 
       <!-- Solvents (compact card list) -->
@@ -192,6 +205,20 @@
           <div class="text-gray-500 text-xs">Energy (kWh/g)</div>
           <div id="r_energy" class="text-2xl font-semibold">—</div>
         </div>
+        <!-- Add these three cards after Energy -->
+<div class="border rounded-lg p-3">
+  <div class="text-gray-500 text-xs">RME (%)</div>
+  <div id="r_rme" class="text-2xl font-semibold">—</div>
+</div>
+<div class="border rounded-lg p-3">
+  <div class="text-gray-500 text-xs">Carbon Efficiency (%)</div>
+  <div id="r_ce" class="text-2xl font-semibold">—</div>
+</div>
+<div class="border rounded-lg p-3">
+  <div class="text-gray-500 text-xs">Stoichiometric Factor</div>
+  <div id="r_sf" class="text-2xl font-semibold">—</div>
+</div>
+
       </div>
     </section>
   </main>
@@ -217,18 +244,21 @@
     const reactantsBox = $('#reactants');
     const solventsBox = $('#solvents');
 
-    function reactantCard(data={}) {
-      const card = el('div', 'border rounded-lg p-2 grid grid-cols-3 gap-2 items-end');
-      card.innerHTML = `
-        <input class="r_name border rounded px-2 py-1 text-xs" placeholder="name" value="${data.name||''}">
-        <input class="r_mw border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
-        <div class="flex gap-2">
-          <input class="r_mass flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
-          <button type="button" class="rmv rounded border px-2 text-xs">x</button>
-        </div>`;
-      card.querySelector('.rmv').onclick = () => card.remove();
-      return card;
-    }
+     function reactantCard(data = {}) {
+    const card = el('div', 'border rounded-lg p-2 grid grid-cols-6 gap-2 items-end');
+    card.innerHTML = `
+      <input class="r_name border rounded px-2 py-1 text-xs col-span-2" placeholder="name" value="${data.name||''}">
+      <input class="r_mw   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
+      <input class="r_mass border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
+      <input class="r_c    border rounded px-2 py-1 text-xs" type="number" min="0" placeholder="C atoms" value="${data.carbon_atoms||''}">
+      <input class="r_eu   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq used" value="${data.eq_used||''}">
+      <div class="flex items-center gap-2">
+        <input class="r_es flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
+        <button type="button" class="rmv rounded border px-2 text-xs">x</button>
+      </div>`;
+    card.querySelector('.rmv').onclick = () => card.remove();
+    return card;
+  }
 
     function solventCard(data={}) {
       const card = el('div', 'border rounded-lg p-2 grid grid-cols-4 gap-2 items-end');
@@ -290,15 +320,21 @@
     // Build payload from UI
     function buildPayload() {
       const product = {
-        name: $('#prod_name').value || null,
-        mw: toNum($('#prod_mw').value),
-        actual_mass_g: toNum($('#prod_mass').value)
-      };
-      const reactants = [...reactantsBox.children].map(r => ({
-        name: r.querySelector('.r_name').value || null,
-        mw: toNum(r.querySelector('.r_mw').value),
-        mass_g: toNum(r.querySelector('.r_mass').value)
-      })).filter(x => (x.mw > 0 && x.mass_g >= 0));
+  name: $('#prod_name').value || null,
+  mw: toNum($('#prod_mw').value),
+  actual_mass_g: toNum($('#prod_mass').value),
+  carbon_atoms: toNum($('#prod_carbon')?.value) || null
+};
+
+const reactants = [...reactantsBox.children].map(r => ({
+  name: r.querySelector('.r_name').value || null,
+  mw: toNum(r.querySelector('.r_mw').value),
+  mass_g: toNum(r.querySelector('.r_mass').value),
+  carbon_atoms: toNum(r.querySelector('.r_c')?.value) || null,
+  eq_used: toNum(r.querySelector('.r_eu')?.value) || null,
+  eq_stoich: toNum(r.querySelector('.r_es')?.value) || null
+})).filter(x => (x.mw > 0 && x.mass_g >= 0));
+
       const solvents = [...solventsBox.children].map(s => ({
         name: s.querySelector('.s_name').value || '',
         volume_mL: toNum(s.querySelector('.s_vol').value) || 0,
@@ -397,6 +433,10 @@
       setTxt('#r_ef',     data.e_factor ?? '—');
       setTxt('#r_water',  data.water_L_per_g ?? '—');
       setTxt('#r_energy', data.energy_kWh_per_g ?? '—');
+      setTxt('#r_rme', data.rme_pct ?? '—');
+setTxt('#r_ce',  data.carbon_efficiency_pct ?? '—');
+setTxt('#r_sf',  data.sf_overall ?? '—');
+
 
       // visuals
       drawMetricsChart(data);

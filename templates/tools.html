@@ -19,657 +19,339 @@
         <a class="hover:text-emerald-700" href="/">Home</a>
         <a class="text-emerald-700 font-medium" href="/tools">Tools</a>
         <a class="hover:text-emerald-700" href="/simulate">Simulations</a>
-
       </nav>
     </div>
   </header>
 
-  <!-- Main -->
   <main class="mx-auto max-w-6xl px-4 py-10">
     <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Tools & Calculators</h1>
     <p class="text-gray-600 mb-8">Quick calculators to estimate sustainability metrics for reactions.</p>
 
-    <!-- Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- New Reaction → Impact Report -->
-<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="reaction-impact">
-  <div class="flex items-center justify-between gap-3 mb-2">
-    <h2 class="text-xl font-semibold">New Reaction → Impact Report</h2>
-    <button id="load-example" type="button"
-            class="rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-1.5 text-xs font-medium">
-      Load Example (Aspirin)
-    </button>
-  </div>
-  <p class="text-sm text-gray-600 mb-4">
-    Enter reaction details; we’ll compute Atom Economy, PMI, E-factor, Water intensity, and Energy intensity.
-  </p>
-
-  <!-- Form -->
-  <form id="impact-form" class="grid gap-6">
-
-    <!-- Product -->
-    <fieldset class="grid gap-3 border rounded-xl p-4">
-      <legend class="text-sm font-medium px-2">Product</legend>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Name</span>
-          <input id="prod_name" class="border rounded-lg px-3 py-2" placeholder="e.g., aspirin" />
-        </label>
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">MW (g/mol)</span>
-          <input id="prod_mw" type="number" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 180.16" />
-        </label>
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Product mass (g)</span>
-          <input id="prod_mass" type="number" step="any" min="0" required class="border rounded-lg px-3 py-2" placeholder="e.g., 10" />
-        </label>
-      </div>
-    </fieldset>
-
-    <!-- Reactants -->
-    <fieldset class="grid gap-3 border rounded-xl p-4">
-      <legend class="text-sm font-medium px-2">Reactants</legend>
-      <div id="reactants" class="grid gap-3"></div>
-      <button id="add-reactant" type="button"
-              class="mt-1 inline-flex items-center rounded-lg bg-emerald-600 text-white text-xs px-3 py-1.5 hover:bg-emerald-700">
-        + Add reactant
-      </button>
-    </fieldset>
-
-    <!-- Solvents -->
-    <fieldset class="grid gap-3 border rounded-xl p-4">
-      <legend class="text-sm font-medium px-2">Solvents</legend>
-      <div id="solvents" class="grid gap-3"></div>
-      <button id="add-solvent" type="button"
-              class="mt-1 inline-flex items-center rounded-lg bg-emerald-600 text-white text-xs px-3 py-1.5 hover:bg-emerald-700">
-        + Add solvent
-      </button>
-      <p class="text-xs text-gray-500">If density is omitted, the tool assumes 1.0 g/mL. Recovery % subtracts that fraction from PMI/E-factor (unless you include recovered solvent in PMI below).</p>
-    </fieldset>
-
-    <!-- Workup & Conditions -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <fieldset class="grid gap-3 border rounded-xl p-4">
-        <legend class="text-sm font-medium px-2">Workup</legend>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="grid gap-1">
-            <span class="text-xs text-gray-700">Aqueous washes (mL)</span>
-            <input id="workup_washes" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 100" />
-          </label>
-          <label class="grid gap-1">
-            <span class="text-xs text-gray-700">Drying agents (g)</span>
-            <input id="workup_drying" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 2" />
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset class="grid gap-3 border rounded-xl p-4">
-        <legend class="text-sm font-medium px-2">Conditions</legend>
-        <div class="grid grid-cols-3 gap-3">
-          <label class="grid gap-1">
-            <span class="text-xs text-gray-700">Mode</span>
-            <select id="cond_mode" class="border rounded-lg px-3 py-2">
-              <option value="hotplate">Hotplate</option>
-              <option value="microwave">Microwave</option>
-              <option value="reflux">Reflux</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label class="grid gap-1">
-            <span class="text-xs text-gray-700">Time (h)</span>
-            <input id="cond_time" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 1.5" />
-          </label>
-          <label class="grid gap-1">
-            <span class="text-xs text-gray-700">Temp (°C)</span>
-            <input id="cond_temp" type="number" step="any" class="border rounded-lg px-3 py-2" placeholder="optional" />
-          </label>
-        </div>
-      </fieldset>
-    </div>
-
-    <!-- Options -->
-    <div class="flex items-center gap-2">
-      <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
-      <label for="opt_pmi_recovered" class="text-sm text-gray-700">
-        Include recovered solvent in PMI numerator (unchecked = subtract recovered fraction)
-      </label>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex items-center gap-3">
-      <button id="compute-impact" type="submit"
-              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-        Compute Impact
-      </button>
-      <span id="impact-error" class="text-sm text-red-600 hidden"></span>
-    </div>
-  </form>
-
-  <!-- Results -->
-  <div id="impact-results" class="mt-6 hidden">
-    <h3 class="text-lg font-semibold mb-3">Impact Report</h3>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="border rounded-xl p-4">
-        <div class="text-xs uppercase text-gray-500">Atom Economy</div>
-        <div id="r_ae" class="text-2xl font-bold">—</div>
-      </div>
-      <div class="border rounded-xl p-4">
-        <div class="text-xs uppercase text-gray-500">PMI</div>
-        <div id="r_pmi" class="text-2xl font-bold">—</div>
-      </div>
-      <div class="border rounded-xl p-4">
-        <div class="text-xs uppercase text-gray-500">E-factor</div>
-        <div id="r_ef" class="text-2xl font-bold">—</div>
-      </div>
-      <div class="border rounded-xl p-4">
-        <div class="text-xs uppercase text-gray-500">Water (L/g)</div>
-        <div id="r_water" class="text-2xl font-bold">—</div>
-      </div>
-      <div class="border rounded-xl p-4">
-        <div class="text-xs uppercase text-gray-500">Energy (kWh/g)</div>
-        <div id="r_energy" class="text-2xl font-bold">—</div>
-      </div>
-    </div>
-
-    <div class="mt-6">
-      <h4 class="text-sm font-medium mb-2">Breakdown (for audit)</h4>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <tbody id="breakdown-rows"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
 
       <!-- Atom Economy -->
-      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="atom-economy">
+      <section class="rounded-2xl bg-white p-6 shadow-sm border">
         <h2 class="text-xl font-semibold mb-2">Atom Economy</h2>
-        <p class="text-sm text-gray-600 mb-4">
-          <span class="font-medium">Formula:</span> AE (%) = (MW of desired product / Σ MW of reactants) × 100
-        </p>
-
+        <p class="text-sm text-gray-600 mb-4">AE = (MW of desired product) / (Σ MW of reactants) × 100</p>
         <form id="ae-form" class="grid gap-3 max-w-md" novalidate>
           <label class="grid gap-1">
             <span class="text-sm text-gray-700">Product MW (g/mol)</span>
-            <input type="number" id="mw_product" step="any" min="0" required
-                   class="border rounded-lg px-3 py-2"
-                   placeholder="e.g., 180.16" />
+            <input id="ae_prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 180.16"/>
           </label>
           <label class="grid gap-1">
             <span class="text-sm text-gray-700">Total Reactants MW (g/mol)</span>
-            <input type="number" id="mw_reactants_total" step="any" min="0" required
-                   class="border rounded-lg px-3 py-2"
-                   placeholder="e.g., 342.30" />
+            <input id="ae_react_total" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 240.21"/>
           </label>
-
           <div class="flex items-center gap-3 mt-2">
-            <button type="submit"
-                    class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-              Calculate
-            </button>
-            <span id="ae-output" class="text-sm text-gray-800 hidden">
-              <strong>Atom Economy:</strong> <span id="ae-value">—</span> %
-            </span>
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="ae-output" class="text-sm text-gray-800 hidden"><strong>AE:</strong> <span id="ae-value">—</span> %</span>
           </div>
-
           <p id="ae-error" class="text-sm text-red-600 mt-2 hidden"></p>
         </form>
       </section>
 
-      <!-- E-factor -->
-      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="efactor">
+      <!-- E-factor (Total-in) -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border">
         <h2 class="text-xl font-semibold mb-2">E-factor</h2>
-        <p class="text-sm text-gray-600 mb-4">
-          <span class="font-medium">Formula:</span> E-factor = (Total mass of reactants - Total mass of products) / Total mass of products<br>
-          Where, Total mass of reactants - Total mass of products = mass of waste
-        </p>
-
+        <p class="text-sm text-gray-600 mb-4">E = (Total mass in − Product mass) / Product mass</p>
         <form id="ef-form" class="grid gap-3 max-w-md" novalidate>
           <label class="grid gap-1">
-            <span class="text-sm text-gray-700">Total mass of reactants (g)</span>
-            <input type="number" id="ef_total_in" step="any" min="0" required
-                   class="border rounded-lg px-3 py-2"
-                   placeholder="e.g., 150.6" />
+            <span class="text-sm text-gray-700">Total mass in (g)</span>
+            <input id="ef_total_in" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 30"/>
           </label>
           <label class="grid gap-1">
-            <span class="text-sm text-gray-700">Total mass of products (g)</span>
-            <input type="number" id="ef_product" step="any" min="0" required
-                   class="border rounded-lg px-3 py-2"
-                   placeholder="e.g., 30.4" />
+            <span class="text-sm text-gray-700">Product mass (g)</span>
+            <input id="ef_prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 10"/>
           </label>
-
           <div class="flex items-center gap-3 mt-2">
-            <button type="submit"
-                    class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-              Calculate
-            </button>
-            <span id="ef-output" class="text-sm text-gray-800 hidden">
-              <strong>E-factor:</strong> <span id="ef-value">—</span>
-            </span>
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="ef-output" class="text-sm text-gray-800 hidden"><strong>E-factor:</strong> <span id="ef-value">—</span></span>
           </div>
-
           <p id="ef-error" class="text-sm text-red-600 mt-2 hidden"></p>
         </form>
       </section>
 
       <!-- PMI -->
-<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-2" id="pmi">
-  <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
-  <p class="text-sm text-gray-600 mb-4">
-    <span class="font-medium">Formula:</span> PMI = Total mass of reactants / Total mass of products
-  </p>
+      <section class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">PMI (Process Mass Intensity)</h2>
+        <p class="text-sm text-gray-600 mb-4">PMI = Total mass in / Product mass</p>
+        <form id="pmi-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Total mass in (g)</span>
+            <input id="pmi_total_in" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 30"/>
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Product mass (g)</span>
+            <input id="pmi_prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 10"/>
+          </label>
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="pmi-output" class="text-sm text-gray-800 hidden"><strong>PMI:</strong> <span id="pmi-value">—</span></span>
+          </div>
+          <p id="pmi-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
-  <form id="pmi-form" class="grid gap-3 max-w-md" novalidate>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Total mass of reactants (g)</span>
-      <input type="number" id="pmi_total_in" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 15.4" />
-    </label>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Total mass of products (g)</span>
-      <input type="number" id="pmi_product" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 5.7" />
-    </label>
+      <!-- Water Impact -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Water Usage</h2>
+        <p class="text-sm text-gray-600 mb-4">Outputs L per g and L per kg of product</p>
+        <form id="water-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Total water used (L)</span>
+            <input id="water_liters" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 2"/>
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Product mass (g)</span>
+            <input id="water_prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 10"/>
+          </label>
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="water-output" class="text-sm text-gray-800 hidden"><strong>L/g:</strong> <span id="water-lpg">—</span> • <strong>L/kg:</strong> <span id="water-lpk">—</span></span>
+          </div>
+          <p id="water-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
-    <div class="flex items-center gap-3 mt-2">
-      <button type="submit"
-              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-        Calculate
-      </button>
-      <span id="pmi-output" class="text-sm text-gray-800 hidden">
-        <strong>PMI:</strong> <span id="pmi-value">—</span>
-      </span>
-    </div>
+      <!-- Energy Impact -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border">
+        <h2 class="text-xl font-semibold mb-2">Energy Use</h2>
+        <p class="text-sm text-gray-600 mb-4">Outputs kWh per g and kWh per kg of product</p>
+        <form id="energy-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Total energy used (kWh)</span>
+            <input id="energy_kwh" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 0.5"/>
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Product mass (g)</span>
+            <input id="energy_prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 10"/>
+          </label>
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="energy-output" class="text-sm text-gray-800 hidden"><strong>kWh/g:</strong> <span id="energy-kwhg">—</span> • <strong>kWh/kg:</strong> <span id="energy-kwhk">—</span></span>
+          </div>
+          <p id="energy-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
-    <p id="pmi-error" class="text-sm text-red-600 mt-2 hidden"></p>
-  </form>
-</section>
-<!-- Water Usage -->
-<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-1" id="water-usage">
-  <h2 class="text-xl font-semibold mb-2">Water Usage</h2>
-  <p class="text-sm text-gray-600 mb-4">
-    <span class="font-medium">Metric:</span> Normalize total water used by product mass.
-    Reports <em>liters per gram</em> and <em>liters per kilogram</em> of product.
-  </p>
+      <!-- RME -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="rme">
+        <h2 class="text-xl font-semibold mb-2">RME (Reaction Mass Efficiency)</h2>
+        <p class="text-sm text-gray-600 mb-4"><span class="font-medium">Formula:</span> RME = (Product mass) / (Σ Reactant masses) × 100</p>
+        <form id="rme-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Reactant masses (g, comma-separated)</span>
+            <input type="text" id="rme_reactants" class="border rounded-lg px-3 py-2" placeholder="e.g., 8.3, 12.2" />
+          </label>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Product mass (g)</span>
+            <input type="number" id="rme_product" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 10" />
+          </label>
+          <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="rme-output" class="text-sm text-gray-800 hidden"><strong>RME:</strong> <span id="rme-value">—</span> %</span>
+          </div>
+          <p id="rme-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
-  <form id="water-form" class="grid gap-3 max-w-md" novalidate>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Total water used (L)</span>
-      <input type="number" id="water_liters" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 12.5" />
-    </label>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Product mass (g)</span>
-      <input type="number" id="water_product_g" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 25" />
-    </label>
+      <!-- Carbon Efficiency -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="carbon-efficiency">
+        <h2 class="text-xl font-semibold mb-2">Carbon Efficiency</h2>
+        <p class="text-sm text-gray-600 mb-4">% of carbon atoms from reactants that end up in the product.</p>
+        <form id="ce-form" class="grid gap-3 max-w-md" novalidate>
+          <fieldset class="grid gap-2 border rounded p-3">
+            <legend class="text-sm font-medium px-1">Product</legend>
+            <input class="border rounded px-3 py-2" id="ce_p_mass" type="number" step="any" min="0" placeholder="mass g">
+            <input class="border rounded px-3 py-2" id="ce_p_mw"   type="number" step="any" min="0" placeholder="MW g/mol">
+            <input class="border rounded px-3 py-2" id="ce_p_c"    type="number" step="1"   min="0" placeholder="carbon atoms">
+          </fieldset>
+          <fieldset class="grid gap-2 border rounded p-3">
+            <legend class="text-sm font-medium px-1">Reactants (comma-separated triplets)</legend>
+            <input class="border rounded px-3 py-2" id="ce_r_list" placeholder="mass_g:mw:carbon_atoms, e.g., 8.3:138.12:7, 12.2:102.09:4">
+          </fieldset>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="ce-output" class="text-sm text-gray-800 hidden"><strong>Carbon Efficiency:</strong> <span id="ce-value">—</span> %</span>
+          </div>
+          <p id="ce-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
-    <div class="flex items-center gap-3 mt-2">
-      <button type="submit"
-              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-        Calculate
-      </button>
-      <span id="water-output" class="text-sm text-gray-800 hidden">
-        <strong>L/g:</strong> <span id="water-lpg">—</span> |
-        <strong>L/kg:</strong> <span id="water-lpk">—</span>
-      </span>
-    </div>
-    <p id="water-error" class="text-sm text-red-600 mt-2 hidden"></p>
-  </form>
-</section>
-
-<!-- Energy Use -->
-<section class="rounded-2xl bg-white p-6 shadow-sm border md:col-span-1" id="energy-use">
-  <h2 class="text-xl font-semibold mb-2">Energy Use</h2>
-  <p class="text-sm text-gray-600 mb-4">
-    <span class="font-medium">Metric:</span> Normalize total energy used by product mass.
-    Reports <em>kWh per gram</em> and <em>kWh per kilogram</em> of product.
-  </p>
-
-  <form id="energy-form" class="grid gap-3 max-w-md" novalidate>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Total energy (kWh)</span>
-      <input type="number" id="energy_kwh" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 3.2" />
-    </label>
-    <label class="grid gap-1">
-      <span class="text-sm text-gray-700">Product mass (g)</span>
-      <input type="number" id="energy_product_g" step="any" min="0" required
-             class="border rounded-lg px-3 py-2" placeholder="e.g., 40" />
-    </label>
-
-    <div class="flex items-center gap-3 mt-2">
-      <button type="submit"
-              class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">
-        Calculate
-      </button>
-      <span id="energy-output" class="text-sm text-gray-800 hidden">
-        <strong>kWh/g:</strong> <span id="energy-kwhpg">—</span> |
-        <strong>kWh/kg:</strong> <span id="energy-kwhpk">—</span>
-      </span>
-    </div>
-    <p id="energy-error" class="text-sm text-red-600 mt-2 hidden"></p>
-  </form>
-</section>
-
+      <!-- Stoichiometric Factor -->
+      <section class="rounded-2xl bg-white p-6 shadow-sm border" id="stoichiometric-factor">
+        <h2 class="text-xl font-semibold mb-2">Stoichiometric Factor</h2>
+        <p class="text-sm text-gray-600 mb-4">Overall SF = (Σ equivalents used) / (Σ stoichiometric equivalents required)</p>
+        <form id="sf-form" class="grid gap-3 max-w-md" novalidate>
+          <label class="grid gap-1">
+            <span class="text-sm text-gray-700">Species (comma-separated triples name:eq_used:eq_stoich)</span>
+            <input id="sf_list" class="border rounded-lg px-3 py-2" placeholder="e.g., salicylic acid:1.0:1.0, acetic anhydride:1.2:1.0">
+          </label>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-white text-sm font-medium hover:bg-emerald-700">Calculate</button>
+            <span id="sf-output" class="text-sm text-gray-800 hidden"><strong>Overall SF:</strong> <span id="sf-value">—</span></span>
+          </div>
+          <p id="sf-error" class="text-sm text-red-600 mt-2 hidden"></p>
+        </form>
+      </section>
 
     </div>
   </main>
 
-  <!-- Footer -->
   <footer class="mt-12 border-t">
     <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
       © <span id="year"></span> Green Toolkit • Tools & Calculators
     </div>
   </footer>
 
-  <!-- Scripts -->
-<script>
-  // ---------- Helpers (define ONCE) ----------
-  const $  = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
-  const el = (tag, cls) => { const x = document.createElement(tag); if (cls) x.className = cls; return x; };
-  const show = (n) => n.classList.remove('hidden');
-  const hide = (n) => n.classList.add('hidden');
-  const toNum = (v) => { const n = Number(v); return Number.isFinite(n) ? n : NaN; };
+  <script>
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-  // Year in footer
-  const yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-  // ---------- Atom Economy ----------
-  (function initAE() {
-    const form = $('#ae-form'); if (!form) return;
-    const out = $('#ae-output'), val = $('#ae-value'), err = $('#ae-error');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      const mw_product = toNum($('#mw_product').value);
-      const mw_reactants_total = toNum($('#mw_reactants_total').value);
-      if (!(mw_product > 0) || !(mw_reactants_total > 0)) {
-        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
-      }
-      try {
-        const res = await fetch('/api/atom-economy', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ mw_product, mw_reactants_total })
-        });
+    // Atom Economy
+    (function(){
+      const f = document.querySelector('#ae-form'); if(!f) return;
+      const out = document.querySelector('#ae-output'), val = document.querySelector('#ae-value'), err = document.querySelector('#ae-error');
+      f.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const mw_product = Number(document.querySelector('#ae_prod_mw').value);
+        const mw_reactants_total = Number(document.querySelector('#ae_react_total').value);
+        if(!(mw_product>0 && mw_reactants_total>0)) { err.textContent='Enter positive product MW and total reactants MW.'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/atom-economy',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mw_product, mw_reactants_total})});
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Error calculating Atom Economy.'; show(err); return; }
-        val.textContent = Number(data.atom_economy_pct).toFixed(2); show(out);
-      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
-    });
-  })();
+        if(!res.ok){ err.textContent=data.detail||'Server error'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.atom_economy_pct).toFixed(2); out.classList.remove('hidden');
+      });
+    })();
 
-  // ---------- E-factor ----------
-  (function initEF() {
-    const form = $('#ef-form'); if (!form) return;
-    const out = $('#ef-output'), val = $('#ef-value'), err = $('#ef-error');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      const total_mass_in = toNum($('#ef_total_in').value);
-      const product_mass = toNum($('#ef_product').value);
-      if (!(total_mass_in > 0) || !(product_mass > 0)) {
-        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
-      }
-      try {
-        const res = await fetch('/api/e-factor', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ total_mass_in, product_mass })
-        });
+    // E-factor
+    (function(){
+      const f = document.querySelector('#ef-form'); if(!f) return;
+      const out = document.querySelector('#ef-output'), val = document.querySelector('#ef-value'), err = document.querySelector('#ef-error');
+      f.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const total_mass_in = Number(document.querySelector('#ef_total_in').value);
+        const product_mass = Number(document.querySelector('#ef_prod_mass').value);
+        if(!(total_mass_in>=0 && product_mass>0)) { err.textContent='Enter total mass in (>=0) and product mass (>0).'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/e-factor',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({total_mass_in, product_mass})});
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Error calculating E-factor.'; show(err); return; }
-        val.textContent = Number(data.e_factor).toFixed(4); show(out);
-      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
-    });
-  })();
+        if(!res.ok){ err.textContent=data.detail||'Server error'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.e_factor).toFixed(4); out.classList.remove('hidden');
+      });
+    })();
 
-  // ---------- PMI ----------
-  (function initPMI() {
-    const form = $('#pmi-form'); if (!form) return;
-    const out = $('#pmi-output'), val = $('#pmi-value'), err = $('#pmi-error');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      const total_mass_in = toNum($('#pmi_total_in').value);
-      const product_mass = toNum($('#pmi_product').value);
-      if (!(total_mass_in > 0) || !(product_mass > 0)) {
-        err.textContent = 'Please enter positive numbers for both fields.'; show(err); return;
-      }
-      try {
-        const res = await fetch('/api/pmi', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ total_mass_in, product_mass })
-        });
+    // PMI
+    (function(){
+      const f = document.querySelector('#pmi-form'); if(!f) return;
+      const out = document.querySelector('#pmi-output'), val = document.querySelector('#pmi-value'), err = document.querySelector('#pmi-error');
+      f.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const total_mass_in = Number(document.querySelector('#pmi_total_in').value);
+        const product_mass = Number(document.querySelector('#pmi_prod_mass').value);
+        if(!(total_mass_in>0 && product_mass>0)) { err.textContent='Enter positive total mass in and product mass.'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/pmi',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({total_mass_in, product_mass})});
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Error calculating PMI.'; show(err); return; }
-        val.textContent = Number(data.pmi).toFixed(4); show(out);
-      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
-    });
-  })();
+        if(!res.ok){ err.textContent=data.detail||'Server error'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.pmi).toFixed(4); out.classList.remove('hidden');
+      });
+    })();
 
-  // ---------- Water Usage ----------
-  (function initWater() {
-    const form = $('#water-form'); if (!form) return;
-    const out = $('#water-output'), err = $('#water-error');
-    const lpg = $('#water-lpg'), lpk = $('#water-lpk');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      const water_liters = toNum($('#water_liters').value);
-      const product_mass_g = toNum($('#water_product_g').value);
-      if (!(water_liters >= 0) || !(product_mass_g > 0)) {
-        err.textContent = 'Enter valid numbers (water ≥ 0, product > 0).'; show(err); return;
-      }
-      try {
-        const res = await fetch('/api/water-impact', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ water_liters, product_mass_g })
-        });
+    // Water
+    (function(){
+      const f = document.querySelector('#water-form'); if(!f) return;
+      const out = document.querySelector('#water-output'), lpg = document.querySelector('#water-lpg'), lpk = document.querySelector('#water-lpk'), err = document.querySelector('#water-error');
+      f.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const water_liters = Number(document.querySelector('#water_liters').value);
+        const product_mass_g = Number(document.querySelector('#water_prod_mass').value);
+        if(!(water_liters>=0 && product_mass_g>0)) { err.textContent='Enter water (>=0) and product mass (>0).'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/water-impact',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({water_liters, product_mass_g})});
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Error calculating water impact.'; show(err); return; }
+        if(!res.ok){ err.textContent=data.detail||'Server error'; err.classList.remove('hidden'); return; }
         lpg.textContent = Number(data.liters_per_g).toFixed(4);
         lpk.textContent = Number(data.liters_per_kg).toFixed(2);
-        show(out);
-      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
-    });
-  })();
-
-  // ---------- Energy Use ----------
-  (function initEnergy() {
-    const form = $('#energy-form'); if (!form) return;
-    const out = $('#energy-output'), err = $('#energy-error');
-    const kwhpg = $('#energy-kwhpg'), kwhpk = $('#energy-kwhpk');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      const kwh = toNum($('#energy_kwh').value);
-      const product_mass_g = toNum($('#energy_product_g').value);
-      if (!(kwh >= 0) || !(product_mass_g > 0)) {
-        err.textContent = 'Enter valid numbers (kWh ≥ 0, product > 0).'; show(err); return;
-      }
-      try {
-        const res = await fetch('/api/energy-impact', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ kwh, product_mass_g })
-        });
-        const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Error calculating energy impact.'; show(err); return; }
-        kwhpg.textContent = Number(data.kwh_per_g).toFixed(6);
-        kwhpk.textContent = Number(data.kwh_per_kg).toFixed(4);
-        show(out);
-      } catch { err.textContent = 'Network error. Is the server running?'; show(err); }
-    });
-  })();
-
-  // ---------- New Reaction → Impact Report ----------
-  (function initImpactForm() {
-    const form = $('#impact-form'); if (!form) return;
-    const err = $('#impact-error');
-    const results = $('#impact-results');
-    const breakdownBody = $('#breakdown-rows');
-
-    const reactantsBox = $('#reactants');
-    const solventsBox  = $('#solvents');
-
-    // builders
-    function reactantRow(data = {}) {
-      const row = el('div', 'grid grid-cols-1 md:grid-cols-3 gap-3 items-end');
-      row.innerHTML = `
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Name</span>
-          <input class="reactant_name border rounded-lg px-3 py-2" placeholder="e.g., salicylic acid" value="${data.name||''}">
-        </label>
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">MW (g/mol)</span>
-          <input type="number" step="any" min="0" class="reactant_mw border rounded-lg px-3 py-2" placeholder="e.g., 138.12" value="${data.mw||''}">
-        </label>
-        <div class="flex gap-3">
-          <label class="flex-1 grid gap-1">
-            <span class="text-xs text-gray-700">Mass (g)</span>
-            <input type="number" step="any" min="0" class="reactant_mass border rounded-lg px-3 py-2" placeholder="e.g., 8.3" value="${data.mass_g||''}">
-          </label>
-          <button type="button" class="remove-reactant rounded-lg border px-3 py-2 text-xs">Remove</button>
-        </div>`;
-      row.querySelector('.remove-reactant').onclick = () => row.remove();
-      return row;
-    }
-    function solventRow(data = {}) {
-      const row = el('div', 'grid grid-cols-1 md:grid-cols-4 gap-3 items-end');
-      row.innerHTML = `
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Name</span>
-          <input class="solv_name border rounded-lg px-3 py-2" placeholder="e.g., ethyl acetate" value="${data.name||''}">
-        </label>
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Volume (mL)</span>
-          <input type="number" step="any" min="0" class="solv_vol border rounded-lg px-3 py-2" placeholder="e.g., 50" value="${data.volume_mL||''}">
-        </label>
-        <label class="grid gap-1">
-          <span class="text-xs text-gray-700">Density (g/mL, optional)</span>
-          <input type="number" step="any" min="0" class="solv_den border rounded-lg px-3 py-2" placeholder="e.g., 0.902" value="${data.density_g_per_mL||''}">
-        </label>
-        <div class="flex gap-3">
-          <label class="flex-1 grid gap-1">
-            <span class="text-xs text-gray-700">Recovery (%)</span>
-            <input type="number" step="any" min="0" max="100" class="solv_rec border rounded-lg px-3 py-2" placeholder="e.g., 60" value="${data.recovery_pct||''}">
-          </label>
-          <button type="button" class="remove-solvent rounded-lg border px-3 py-2 text-xs">Remove</button>
-        </div>`;
-      row.querySelector('.remove-solvent').onclick = () => row.remove();
-      return row;
-    }
-
-    // ensure at least one row each
-    if (!reactantsBox.children.length) reactantsBox.appendChild(reactantRow());
-    if (!solventsBox.children.length)  solventsBox.appendChild(solventRow());
-
-    // add row buttons
-    $('#add-reactant').onclick = () => reactantsBox.appendChild(reactantRow());
-    $('#add-solvent').onclick  = () => solventsBox.appendChild(solventRow());
-
-    // load example
-    $('#load-example').onclick = () => {
-      $('#prod_name').value = 'aspirin';
-      $('#prod_mw').value   = '180.16';
-      $('#prod_mass').value = '10';
-
-      reactantsBox.innerHTML = '';
-      reactantsBox.appendChild(reactantRow({name:'salicylic acid', mw:138.12, mass_g:8.3}));
-      reactantsBox.appendChild(reactantRow({name:'acetic anhydride', mw:102.09, mass_g:12.2}));
-
-      solventsBox.innerHTML = '';
-      solventsBox.appendChild(solventRow({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
-      solventsBox.appendChild(solventRow({name:'water', volume_mL:150, recovery_pct:0}));
-
-      $('#workup_washes').value = '100';
-      $('#workup_drying').value = '2';
-      $('#cond_mode').value = 'hotplate';
-      $('#cond_time').value = '1.5';
-      $('#cond_temp').value = '70';
-      $('#opt_pmi_recovered').checked = false;
-    };
-
-    // build payload
-    function buildPayload() {
-      const product = {
-        name: $('#prod_name').value || null,
-        mw: toNum($('#prod_mw').value),
-        actual_mass_g: toNum($('#prod_mass').value)
-      };
-      const reactants = [...reactantsBox.querySelectorAll(':scope > div')].map(row => ({
-        name: row.querySelector('.reactant_name').value || null,
-        mw: toNum(row.querySelector('.reactant_mw').value),
-        mass_g: toNum(row.querySelector('.reactant_mass').value)
-      })).filter(r => (r.mw > 0 && r.mass_g >= 0));
-      const solvents = [...solventsBox.querySelectorAll(':scope > div')].map(row => ({
-        name: row.querySelector('.solv_name').value || '',
-        volume_mL: toNum(row.querySelector('.solv_vol').value) || 0,
-        density_g_per_mL: toNum(row.querySelector('.solv_den').value) || null,
-        recovery_pct: toNum(row.querySelector('.solv_rec').value) || 0
-      })).filter(s => (s.name && s.volume_mL >= 0));
-      const workup = {
-        aqueous_washes_mL: toNum($('#workup_washes').value) || 0,
-        organic_rinses_mL: 0,
-        drying_agents_g: toNum($('#workup_drying').value) || 0
-      };
-      const conditions = {
-        temp_C: toNum($('#cond_temp').value) || null,
-        time_h: toNum($('#cond_time').value) || 0,
-        mode: $('#cond_mode').value
-      };
-      const options = {
-        count_recovered_solvent_in_pmi: $('#opt_pmi_recovered').checked
-      };
-      return { product, reactants, solvents, workup, conditions, options };
-    }
-
-    // render results
-    function renderResults(data) {
-      $('#r_ae').textContent     = data.atom_economy_pct ?? '—';
-      $('#r_pmi').textContent    = data.pmi ?? '—';
-      $('#r_ef').textContent     = data.e_factor ?? '—';
-      $('#r_water').textContent  = data.water_L_per_g ?? '—';
-      $('#r_energy').textContent = data.energy_kWh_per_g ?? '—';
-
-      breakdownBody.innerHTML = '';
-      Object.entries(data.breakdown || {}).forEach(([k,v]) => {
-        const tr = el('tr');
-        tr.innerHTML = `<td class="py-1 pr-4 text-gray-500">${k}</td><td class="py-1 font-medium">${v}</td>`;
-        breakdownBody.appendChild(tr);
+        out.classList.remove('hidden');
       });
-      show(results);
-    }
+    })();
 
-    // submit
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault(); hide(err);
-      try {
-        const payload = buildPayload();
-        if (!(payload.product.mw > 0 && payload.product.actual_mass_g > 0)) {
-          err.textContent = 'Product MW and product mass must be > 0.'; show(err); return;
-        }
-        if (!payload.reactants.length) {
-          err.textContent = 'Add at least one reactant with MW and mass.'; show(err); return;
-        }
-        const res = await fetch('/api/impact/compute', {
-          method: 'POST', headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-        });
+    // Energy
+    (function(){
+      const f = document.querySelector('#energy-form'); if(!f) return;
+      const out = document.querySelector('#energy-output'), kwhg = document.querySelector('#energy-kwhg'), kwhk = document.querySelector('#energy-kwhk'), err = document.querySelector('#energy-error');
+      f.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const kwh = Number(document.querySelector('#energy_kwh').value);
+        const product_mass_g = Number(document.querySelector('#energy_prod_mass').value);
+        if(!(kwh>=0 && product_mass_g>0)) { err.textContent='Enter kWh (>=0) and product mass (>0).'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/energy-impact',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({kwh, product_mass_g})});
         const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Server error.'; show(err); return; }
-        renderResults(data);
-        window.scrollTo({ top: $('#reaction-impact').offsetTop, behavior: 'smooth' });
-      } catch {
-        err.textContent = 'Network error. Is the server running?'; show(err);
-      }
-    });
-  })();
-</script>
-`
+        if(!res.ok){ err.textContent=data.detail||'Server error'; err.classList.remove('hidden'); return; }
+        kwhg.textContent = Number(data.kwh_per_g).toFixed(6);
+        kwhk.textContent = Number(data.kwh_per_kg).toFixed(4);
+        out.classList.remove('hidden');
+      });
+    })();
+
+    // RME
+    (function(){
+      const form = document.querySelector('#rme-form'); if (!form) return;
+      const out = document.querySelector('#rme-output'), val = document.querySelector('#rme-value'), err = document.querySelector('#rme-error');
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const masses = (document.querySelector('#rme_reactants').value||'')
+          .split(',').map(s=>Number(s.trim())).filter(n=>Number.isFinite(n) && n>=0);
+        const product_mass_g = Number(document.querySelector('#rme_product').value);
+        if (!masses.length || !(product_mass_g>0)) { err.textContent='Enter reactant masses and product mass (>0).'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/rme', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({reactant_masses_g:masses, product_mass_g})});
+        const data = await res.json();
+        if (!res.ok){ err.textContent=data.detail||'Error calculating RME.'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.rme_pct).toFixed(2); out.classList.remove('hidden');
+      });
+    })();
+
+    // Carbon Efficiency
+    (function(){
+      const form = document.querySelector('#ce-form'); if (!form) return;
+      const out = document.querySelector('#ce-output'), val = document.querySelector('#ce-value'), err = document.querySelector('#ce-error');
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const product = {
+          mass_g: Number(document.querySelector('#ce_p_mass').value),
+          mw: Number(document.querySelector('#ce_p_mw').value),
+          carbon_atoms: Number(document.querySelector('#ce_p_c').value)
+        };
+        const reactants = (document.querySelector('#ce_r_list').value||'').split(',')
+          .map(s=>s.trim()).filter(Boolean).map(t=>{
+            const [mass_g, mw, carbon_atoms] = t.split(':').map(Number);
+            return {mass_g, mw, carbon_atoms};
+          });
+        if (!(product.mass_g>=0 && product.mw>0 && product.carbon_atoms>=0) || !reactants.length){
+          err.textContent='Provide product (mass, MW, carbon atoms) and at least one reactant triplet.'; err.classList.remove('hidden'); return;
+        }
+        const res = await fetch('/api/carbon-efficiency',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({product, reactants})});
+        const data = await res.json();
+        if (!res.ok){ err.textContent=data.detail||'Error calculating Carbon Efficiency.'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.carbon_efficiency_pct).toFixed(2); out.classList.remove('hidden');
+      });
+    })();
+
+    // Stoichiometric Factor
+    (function(){
+      const form = document.querySelector('#sf-form'); if (!form) return;
+      const out = document.querySelector('#sf-output'), val = document.querySelector('#sf-value'), err = document.querySelector('#sf-error');
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault(); err.classList.add('hidden');
+        const species = (document.querySelector('#sf_list').value||'').split(',')
+          .map(s=>s.trim()).filter(Boolean).map(t=>{
+            const [name, eu, es] = t.split(':'); return {name, eq_used:Number(eu), eq_stoich:Number(es)};
+          });
+        if (!species.length){ err.textContent='Provide at least one species triple.'; err.classList.remove('hidden'); return; }
+        const res = await fetch('/api/stoichiometric-factor',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({species})});
+        const data = await res.json();
+        if (!res.ok){ err.textContent=data.detail||'Error calculating SF.'; err.classList.remove('hidden'); return; }
+        val.textContent = Number(data.sf_overall).toFixed(4); out.classList.remove('hidden');
+      });
+    })();
+  </script>
 </body>
 </html>
