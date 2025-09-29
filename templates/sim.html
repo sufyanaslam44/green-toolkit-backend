@@ -39,27 +39,31 @@
       </div>
       <p class="text-xs text-gray-600 mt-1">Tweak variables; visuals update instantly.</p>
 
-      <!-- Product -->
-      <div class="mt-4">
-        <h2 class="text-sm font-medium mb-2">Product</h2>
-        <label class="text-xs text-gray-700">Name</label>
-        <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
-        <div class="grid grid-cols-3 gap-3">
-          <label class="grid">
-            <span class="text-xs text-gray-700">MW (g/mol)</span>
-            <input id="prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="180.16">
-          </label>
-          <label class="grid">
-            <span class="text-xs text-gray-700">Mass (g)</span>
-            <input id="prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="10">
-          </label>
-          <!-- add below Product Mass -->
-<label class="grid">
-  <span class="text-xs text-gray-700">Product carbon atoms (optional)</span>
-  <input id="prod_carbon" type="number" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 9">
-</label>
+    <!-- Product -->
+<div class="mt-4">
+  <h2 class="text-sm font-medium mb-2">Product</h2>
+  <label class="text-xs text-gray-700">Name</label>
+  <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
 
-        </div>
+  <!-- MW & Mass (top row, two columns) -->
+  <div class="grid grid-cols-2 gap-3">
+    <label class="grid">
+      <span class="text-xs text-gray-700">MW (g/mol)</span>
+      <input id="prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="180.16">
+    </label>
+    <label class="grid">
+      <span class="text-xs text-gray-700">Mass (g)</span>
+      <input id="prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="10">
+    </label>
+  </div>
+
+  <!-- Carbon atoms (beneath) -->
+  <label class="grid mt-3">
+    <span class="text-xs text-gray-700">Product carbon atoms (optional)</span>
+    <input id="prod_carbon" type="number" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 9">
+  </label>
+</div>
+
       </div>
 
       <!-- Reactants (compact card list) -->
@@ -69,10 +73,7 @@
           <button id="add-reactant" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
         </div>
         <div id="reactants" class="mt-2 grid gap-2"></div>
-        <!-- inside reactantCard(data) template string, after mass -->
-<input class="r_c  ..." type="number" min="0"     placeholder="C atoms"  value="${data.carbon_atoms||''}">
-<input class="r_eu ..." type="number" step="any" min="0" placeholder="eq used"  value="${data.eq_used||''}">
-<input class="r_es ..." type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
+        
 
 
 
@@ -105,33 +106,41 @@
           <input id="workup_drying" class="w-full knob" type="range" min="0" max="10" value="0" step="0.1">
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
-          <label class="grid">
-            <span class="text-sm font-medium">Mode</span>
-            <select id="cond_mode" class="border rounded-lg px-2 py-2">
-              <option value="hotplate">🔥 Hotplate</option>
-              <option value="microwave">⚡ Microwave</option>
-              <option value="reflux">♻ Reflux</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-          <label class="grid">
-            <span class="text-sm font-medium">Time (h)</span>
-            <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
-            <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
-          </label>
-          <label class="grid">
-            <span class="text-sm font-medium">Temp (°C)</span>
-            <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
-            <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
-          </label>
-        </div>
+       <!-- Workup + Conditions -->
+<div class="mt-5 grid gap-4">
+  <!-- (keep Aqueous washes & Drying agents sliders as-is) -->
 
-        <label class="inline-flex items-center gap-2">
-          <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
-          <span class="text-xs">Include recovered solvent in PMI numerator</span>
-        </label>
-      </div>
+  <!-- Conditions: vertical order Mode → Time → Temp -->
+  <div class="grid gap-3">
+    <label class="grid">
+      <span class="text-sm font-medium">Mode</span>
+      <select id="cond_mode" class="border rounded-lg px-2 py-2">
+        <option value="hotplate">🔥 Hotplate</option>
+        <option value="microwave">⚡ Microwave</option>
+        <option value="reflux">♻ Reflux</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+
+    <label class="grid">
+      <span class="text-sm font-medium">Time (h)</span>
+      <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
+      <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
+    </label>
+
+    <label class="grid">
+      <span class="text-sm font-medium">Temp (°C)</span>
+      <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
+      <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
+    </label>
+  </div>
+
+  <label class="inline-flex items-center gap-2">
+    <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
+    <span class="text-xs">Include recovered solvent in PMI numerator</span>
+  </label>
+</div>
+
 
       <div class="mt-5 flex items-center gap-2">
         <button id="simulate" class="rounded-lg bg-emerald-600 text-white px-4 py-2 text-sm hover:bg-emerald-700">Run Simulation</button>
@@ -140,87 +149,85 @@
       </div>
     </section>
 
-    <!-- Right: Visuals -->
-    <section class="rounded-2xl bg-white p-5 shadow-sm border md:col-span-2">
-      <div class="grid gap-4 md:grid-cols-2">
-        <!-- Metric bars -->
-        <div class="border rounded-xl p-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-medium">Impact Metrics</h2>
-            <div class="flex gap-1">
-              <span class="badge bg-green-100 text-green-800">good</span>
-              <span class="badge bg-yellow-100 text-yellow-800">ok</span>
-              <span class="badge bg-red-100 text-red-800">needs work</span>
-            </div>
-          </div>
-          <canvas id="metricsChart" class="mt-4"></canvas>
-        </div>
+    <!-- Right: Metrics (top) + Visuals (beneath) -->
+<section class="rounded-2xl bg-white p-5 shadow-sm border md:col-span-2">
+  <!-- Raw numbers FIRST -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-sm">
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Atom Economy</div>
+      <div id="r_ae" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">PMI</div>
+      <div id="r_pmi" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">E-factor</div>
+      <div id="r_ef" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Water (L/g)</div>
+      <div id="r_water" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Energy (kWh/g)</div>
+      <div id="r_energy" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">RME (%)</div>
+      <div id="r_rme" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Carbon Efficiency (%)</div>
+      <div id="r_ce" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Stoichiometric Factor</div>
+      <div id="r_sf" class="text-2xl font-semibold">—</div>
+    </div>
+  </div>
 
-        <!-- Sankey -->
-        <div class="border rounded-xl p-4">
-          <h2 class="text-sm font-medium">Mass Flow</h2>
-          <div id="sankey" class="mt-4"></div>
-        </div>
-
-        <!-- Beaker animation -->
-        <div class="border rounded-xl p-4 md:col-span-2">
-          <h2 class="text-sm font-medium">Beaker (Product vs Waste vs Recovered)</h2>
-          <div class="mt-3 flex items-end gap-6">
-            <svg id="beaker" width="220" height="180">
-              <!-- simple beaker outline -->
-              <rect x="10" y="10" width="200" height="160" rx="8" ry="8" fill="none" stroke="#374151" stroke-width="2"/>
-              <!-- fills -->
-              <rect id="fill-recovered" x="12" y="168" width="196" height="0" fill="#A7F3D0"></rect>
-              <rect id="fill-waste"     x="12" y="168" width="196" height="0" fill="#FECACA"></rect>
-              <rect id="fill-product"   x="12" y="168" width="196" height="0" fill="#93C5FD"></rect>
-            </svg>
-            <div class="text-xs text-gray-600">
-              <div><span class="inline-block w-3 h-3 mr-2" style="background:#93C5FD"></span>Product</div>
-              <div><span class="inline-block w-3 h-3 mr-2" style="background:#FECACA"></span>Waste (non-recovered)</div>
-              <div><span class="inline-block w-3 h-3 mr-2" style="background:#A7F3D0"></span>Recovered solvent</div>
-            </div>
-          </div>
+  <!-- Visuals BENEATH -->
+  <div class="mt-6 grid gap-4 md:grid-cols-2">
+    <!-- Metric bars -->
+    <div class="border rounded-xl p-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-medium">Impact Metrics</h2>
+        <div class="flex gap-1">
+          <span class="badge bg-green-100 text-green-800">good</span>
+          <span class="badge bg-yellow-100 text-yellow-800">ok</span>
+          <span class="badge bg-red-100 text-red-800">needs work</span>
         </div>
       </div>
+      <canvas id="metricsChart" class="mt-4"></canvas>
+    </div>
 
-      <!-- Raw numbers -->
-      <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3 text-center text-sm">
-        <div class="border rounded-lg p-3">
-          <div class="text-gray-500 text-xs">Atom Economy</div>
-          <div id="r_ae" class="text-2xl font-semibold">—</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="text-gray-500 text-xs">PMI</div>
-          <div id="r_pmi" class="text-2xl font-semibold">—</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="text-gray-500 text-xs">E-factor</div>
-          <div id="r_ef" class="text-2xl font-semibold">—</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="text-gray-500 text-xs">Water (L/g)</div>
-          <div id="r_water" class="text-2xl font-semibold">—</div>
-        </div>
-        <div class="border rounded-lg p-3">
-          <div class="text-gray-500 text-xs">Energy (kWh/g)</div>
-          <div id="r_energy" class="text-2xl font-semibold">—</div>
-        </div>
-        <!-- Add these three cards after Energy -->
-<div class="border rounded-lg p-3">
-  <div class="text-gray-500 text-xs">RME (%)</div>
-  <div id="r_rme" class="text-2xl font-semibold">—</div>
-</div>
-<div class="border rounded-lg p-3">
-  <div class="text-gray-500 text-xs">Carbon Efficiency (%)</div>
-  <div id="r_ce" class="text-2xl font-semibold">—</div>
-</div>
-<div class="border rounded-lg p-3">
-  <div class="text-gray-500 text-xs">Stoichiometric Factor</div>
-  <div id="r_sf" class="text-2xl font-semibold">—</div>
-</div>
+    <!-- Sankey -->
+    <div class="border rounded-xl p-4">
+      <h2 class="text-sm font-medium">Mass Flow</h2>
+      <div id="sankey" class="mt-4"></div>
+    </div>
 
+    <!-- Beaker animation -->
+    <div class="border rounded-xl p-4 md:col-span-2">
+      <h2 class="text-sm font-medium">Beaker (Product vs Waste vs Recovered)</h2>
+      <div class="mt-3 flex items-end gap-6">
+        <svg id="beaker" width="220" height="180">
+          <rect x="10" y="10" width="200" height="160" rx="8" ry="8" fill="none" stroke="#374151" stroke-width="2"/>
+          <rect id="fill-recovered" x="12" y="168" width="196" height="0" fill="#A7F3D0"></rect>
+          <rect id="fill-waste"     x="12" y="168" width="196" height="0" fill="#FECACA"></rect>
+          <rect id="fill-product"   x="12" y="168" width="196" height="0" fill="#93C5FD"></rect>
+        </svg>
+        <div class="text-xs text-gray-600">
+          <div><span class="inline-block w-3 h-3 mr-2" style="background:#93C5FD"></span>Product</div>
+          <div><span class="inline-block w-3 h-3 mr-2" style="background:#FECACA"></span>Waste (non-recovered)</div>
+          <div><span class="inline-block w-3 h-3 mr-2" style="background:#A7F3D0"></span>Recovered solvent</div>
+        </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
+
   </main>
 
   <footer class="mt-10 border-t">
@@ -245,34 +252,52 @@
     const solventsBox = $('#solvents');
 
      function reactantCard(data = {}) {
-    const card = el('div', 'border rounded-lg p-2 grid grid-cols-6 gap-2 items-end');
+    const card = el('div', 'border rounded-lg p-3 grid gap-2');
     card.innerHTML = `
-      <input class="r_name border rounded px-2 py-1 text-xs col-span-2" placeholder="name" value="${data.name||''}">
-      <input class="r_mw   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
-      <input class="r_mass border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
-      <input class="r_c    border rounded px-2 py-1 text-xs" type="number" min="0" placeholder="C atoms" value="${data.carbon_atoms||''}">
-      <input class="r_eu   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq used" value="${data.eq_used||''}">
-      <div class="flex items-center gap-2">
-        <input class="r_es flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
-        <button type="button" class="rmv rounded border px-2 text-xs">x</button>
-      </div>`;
+      <!-- Row 1: name, MW, mass -->
+      <div class="grid grid-cols-3 gap-2">
+        <input class="r_name border rounded px-2 py-1 text-xs" placeholder="name" value="${data.name||''}">
+        <input class="r_mw   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
+        <input class="r_mass border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
+      </div>
+
+      <!-- Row 2: carbon atoms, eq used -->
+      <div class="grid grid-cols-2 gap-2">
+        <input class="r_c  border rounded px-2 py-1 text-xs" type="number" min="0" placeholder="C atoms" value="${data.carbon_atoms||''}">
+        <input class="r_eu border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq used" value="${data.eq_used||''}">
+      </div>
+
+      <!-- Row 3: eq stoich, remove -->
+      <div class="grid grid-cols-2 gap-2 items-center">
+        <input class="r_es border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
+        <button type="button" class="rmv justify-self-start rounded border px-3 py-1 text-xs">x</button>
+      </div>
+    `;
     card.querySelector('.rmv').onclick = () => card.remove();
     return card;
   }
 
-    function solventCard(data={}) {
-      const card = el('div', 'border rounded-lg p-2 grid grid-cols-4 gap-2 items-end');
-      card.innerHTML = `
+   function solventCard(data = {}) {
+    const card = el('div', 'border rounded-lg p-3 grid gap-2');
+    card.innerHTML = `
+      <!-- Row 1: solvent, mL -->
+      <div class="grid grid-cols-2 gap-2">
         <input class="s_name border rounded px-2 py-1 text-xs" placeholder="solvent" value="${data.name||''}">
-        <input class="s_vol border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mL" value="${data.volume_mL||''}">
+        <input class="s_vol  border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mL" value="${data.volume_mL||''}">
+      </div>
+
+      <!-- Row 2: density, % rec + remove -->
+      <div class="grid grid-cols-2 gap-2 items-center">
         <input class="s_den border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="density g/mL" value="${data.density_g_per_mL||''}">
         <div class="flex gap-2">
-          <input class="s_rec flex-1 border rounded px-2 py-1 text-xs" type="number" step="any" min="0" max="100" placeholder="% rec" value="${data.recovery_pct||''}">
-          <button type="button" class="rmv rounded border px-2 text-xs">x</button>
-        </div>`;
-      card.querySelector('.rmv').onclick = () => card.remove();
-      return card;
-    }
+          <input class="s_rec border rounded px-2 py-1 text-xs w-24" type="number" step="any" min="0" max="100" placeholder="% rec" value="${data.recovery_pct||''}">
+          <button type="button" class="rmv rounded border px-3 py-1 text-xs">x</button>
+        </div>
+      </div>
+    `;
+    card.querySelector('.rmv').onclick = () => card.remove();
+    return card;
+  }
 
     // Add default cards
     if (!reactantsBox.children.length) reactantsBox.appendChild(reactantCard());
