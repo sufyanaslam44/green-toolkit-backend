@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict, Any
 from pathlib import Path
 from math import isfinite
+from typing import Optional, List, Dict, Any  # (ensure these are imported)
 import os
 
 # ------------------------------------------------------------------------------
@@ -29,7 +30,9 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 @app.get("/api/health")
 def health():
     return {"ok": True}
-
+class SFDetail(BaseModel):
+    name: Optional[str] = None
+    excess_ratio: float
 # ------------------------------------------------------------------------------
 # Atom Economy API
 # ------------------------------------------------------------------------------
@@ -179,7 +182,7 @@ class StoichiometricFactorIn(BaseModel):
 
 class StoichiometricFactorOut(BaseModel):
     sf_overall: float
-    details: List[Dict[str, float]]
+    details: List[SFDetail]          # <-- RIGHT
 
 @app.post("/api/stoichiometric-factor", response_model=StoichiometricFactorOut)
 def calc_stoichiometric_factor(payload: StoichiometricFactorIn):
@@ -257,7 +260,7 @@ class ReactionImpactOut(BaseModel):
     rme_pct: Optional[float] = None
     carbon_efficiency_pct: Optional[float] = None
     sf_overall: Optional[float] = None
-    sf_details: Optional[List[Dict[str, float]]] = None
+    sf_details: Optional[List[SFDetail]] = None  # <-- RIGHT
     breakdown: Dict[str, Any]
     ai_suggestions: List[str] = []
 

@@ -351,26 +351,40 @@
     bindLabel('cond_temp', 'lbl_temp', '°C');
 
     // Example
-    $('#load-example').onclick = () => {
-      $('#prod_name').value = 'aspirin';
-      $('#prod_mw').value = '180.16';
-      $('#prod_mass').value = '10';
+$('#load-example').onclick = () => {
+  // Product
+  $('#prod_name').value  = 'aspirin';
+  $('#prod_mw').value    = '180.16';
+  $('#prod_mass').value  = '10';
+  $('#prod_carbon').value = '9';        // <-- fill product carbon atoms
 
-      reactantsBox.innerHTML = '';
-      reactantsBox.appendChild(reactantCard({name:'salicylic acid', mw:138.12, mass_g:8.3}));
-      reactantsBox.appendChild(reactantCard({name:'acetic anhydride', mw:102.09, mass_g:12.2}));
+  // Reactants (now include carbon + equivalents)
+  reactantsBox.innerHTML = '';
+  reactantsBox.appendChild(reactantCard({
+    name:'salicylic acid', mw:138.12, mass_g:8.3,
+    carbon_atoms:7, eq_used:1.0, eq_stoich:1.0
+  }));
+  reactantsBox.appendChild(reactantCard({
+    name:'acetic anhydride', mw:102.09, mass_g:12.2,
+    carbon_atoms:4, eq_used:1.2, eq_stoich:1.0
+  }));
 
-      solventsBox.innerHTML = '';
-      solventsBox.appendChild(solventCard({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
-      solventsBox.appendChild(solventCard({name:'water', volume_mL:150, recovery_pct:0}));
+  // Solvents
+  solventsBox.innerHTML = '';
+  solventsBox.appendChild(solventCard({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
+  solventsBox.appendChild(solventCard({name:'water', volume_mL:150, recovery_pct:0}));
 
-      document.getElementById('workup_washes').value = 100;
-      document.getElementById('workup_drying').value = 2;
-      document.getElementById('cond_mode').value = 'hotplate';
-      document.getElementById('cond_time').value = 1.5; document.getElementById('lbl_time').textContent = '1.5 h';
-      document.getElementById('cond_temp').value = 70;  document.getElementById('lbl_temp').textContent = '70 °C';
-      document.getElementById('opt_pmi_recovered').checked = false;
-    };
+  // Workup & conditions
+  $('#workup_washes').value = 100;   $('#lbl_washes').textContent = '100 mL';
+  $('#workup_drying').value = 2;     $('#lbl_drying').textContent = '2 g';
+  $('#cond_mode').value = 'hotplate';
+  $('#cond_time').value = 1.5;       $('#lbl_time').textContent = '1.5 h';
+  $('#cond_temp').value = 70;        $('#lbl_temp').textContent = '70 °C';
+  $('#opt_pmi_recovered').checked = false;
+
+  // (optional) auto-run so CE & SF show immediately:
+  // runSim();
+};
 
     // Build payload from UI
     function buildPayload() {
