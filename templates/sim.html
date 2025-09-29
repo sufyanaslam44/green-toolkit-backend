@@ -46,16 +46,21 @@
   <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
 
   <!-- MW & Mass (top row, two columns) -->
-  <div class="grid grid-cols-2 gap-3">
-    <label class="grid">
-      <span class="text-xs text-gray-700">MW (g/mol)</span>
-      <input id="prod_mw" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="180.16">
-    </label>
-    <label class="grid">
-      <span class="text-xs text-gray-700">Mass (g)</span>
-      <input id="prod_mass" type="number" step="any" min="0" class="border rounded-lg px-3 py-2" placeholder="10">
-    </label>
-  </div>
+  <div class="flex gap-6">
+  <label class="grid">
+    <span class="text-xs text-gray-700">MW (g/mol)</span>
+    <input id="prod_mw" type="number" step="any" min="0"
+           class="border rounded-lg px-3 py-2 w-24"
+           placeholder="180.16">
+  </label>
+  <label class="grid">
+    <span class="text-xs text-gray-700">Mass (g)</span>
+    <input id="prod_mass" type="number" step="any" min="0"
+           class="border rounded-lg px-3 py-2 w-24"
+           placeholder="10">
+  </label>
+</div>
+
 
   <!-- Carbon atoms (beneath) -->
   <label class="grid mt-3">
