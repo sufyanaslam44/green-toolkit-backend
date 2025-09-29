@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ title or "Simulations" }}</title>
@@ -9,10 +10,16 @@
   <!-- Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-  <style>
-    .knob { accent-color: #059669; } /* emerald-600 */
-    .badge { font-size: 10px; border-radius: 9999px; padding: 2px 8px; }
-  </style>
+ <style>
+  .knob { accent-color: #059669; } /* emerald-600 */
+  .badge { font-size: 10px; border-radius: 9999px; padding: 2px 8px; }
+  canvas.dial { display:block; width:100% !important; height:100% !important; max-width:100%; max-height:100%; }
+  .dial-wrap { width: 10rem; height: 10rem; }       /* ~160px */
+  @media (min-width: 768px) {
+    .dial-wrap { width: 12rem; height: 12rem; }     /* ~192px on md+ */
+  }
+</style>
+
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900">
   <!-- Header -->
@@ -69,7 +76,7 @@
   </label>
 </div>
 
-      </div>
+      
 
       <!-- Reactants (compact card list) -->
       <div class="mt-5">
@@ -206,7 +213,25 @@
       </div>
       <canvas id="metricsChart" class="mt-4"></canvas>
     </div>
+<!-- Efficiency dials (AE, RME, Carbon Efficiency) -->
+<div class="border rounded-xl p-4 md:col-span-2 overflow-hidden">
+  <h2 class="text-sm font-medium">Efficiency (0–100%)</h2>
 
+  <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-8 place-items-center">
+    <div class="flex flex-col items-center">
+      <div class="dial-wrap"><canvas id="dialAE"  class="dial"></canvas></div>
+      <div class="mt-2 text-sm font-medium text-gray-800">Atom Economy</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="dial-wrap"><canvas id="dialRME" class="dial"></canvas></div>
+      <div class="mt-2 text-sm font-medium text-gray-800">RME</div>
+    </div>
+    <div class="flex flex-col items-center">
+      <div class="dial-wrap"><canvas id="dialCE"  class="dial"></canvas></div>
+      <div class="mt-2 text-sm font-medium text-gray-800">Carbon Efficiency</div>
+    </div>
+  </div>
+</div>
     <!-- Sankey -->
     <div class="border rounded-xl p-4 md:col-span-2">
       <h2 class="text-sm font-medium">Mass Flow</h2>
@@ -403,6 +428,85 @@ const reactants = [...reactantsBox.children].map(r => ({
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
       });
     }
+ // Center-number plugin (NOT registered globally)
+const DialCenterText = {
+  id: 'DialCenterText',
+  afterDraw(chart) {
+    // Run only for doughnuts created for dials
+    if (chart.config.type !== 'doughnut' || !chart.canvas.classList.contains('dial')) return;
+
+    const ds = chart.data.datasets?.[0];
+    if (!ds) return;
+    const v = Math.round(ds.data?.[0] ?? 0);
+
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    ctx.save();
+    // auto-scale font to canvas width
+    const w = chart.width || 180;
+    ctx.font = `600 ${Math.max(14, Math.min(26, w * 0.12))}px system-ui,-apple-system,Segoe UI,Roboto,sans-serif`;
+    ctx.fillStyle = '#111827';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(v + '%',
+      (chartArea.left + chartArea.right) / 2,
+      (chartArea.top + chartArea.bottom) / 2
+    );
+    ctx.restore();
+  }
+};
+
+let dialCharts = { ae: null, rme: null, ce: null };
+
+function makeDial(canvas, value, color) {
+  const ctx = canvas.getContext('2d');
+  const v = Math.max(0, Math.min(100, Number(value) || 0));
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [v, 100 - v],
+        borderWidth: 0,
+        backgroundColor: [color, '#E5E7EB'],
+        cutout: '72%'
+      }]
+    },
+    options: {
+      responsive: false,            // <- turn off auto-resize for dials
+      maintainAspectRatio: false,   // <- let canvas fill wrapper exactly
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      }
+    },
+    plugins: [DialCenterText]       // keep plugin per-chart only
+  });
+}
+function updateDial(chart, value) {
+  if (!chart) return;
+  const v = Math.max(0, Math.min(100, Number(value) || 0));
+  chart.data.datasets[0].data = [v, 100 - v];
+  chart.update();
+}
+
+function drawEfficiencyDials(data) {
+  const ae  = Number(data.atom_economy_pct)      || 0;
+  const rme = Number(data.rme_pct)               || 0;
+  const ce  = Number(data.carbon_efficiency_pct) || 0;
+
+  if (!dialCharts.ae) {
+    dialCharts.ae  = makeDial(document.getElementById('dialAE'),  ae,  '#60A5FA'); // blue-400
+    dialCharts.rme = makeDial(document.getElementById('dialRME'), rme, '#34D399'); // emerald-400
+    dialCharts.ce  = makeDial(document.getElementById('dialCE'),  ce,  '#F472B6'); // pink-400
+  } else {
+    updateDial(dialCharts.ae,  ae);
+    updateDial(dialCharts.rme, rme);
+    updateDial(dialCharts.ce,  ce);
+  }
+}
+
 
     // Sankey
     function drawSankey(data) {
@@ -470,8 +574,10 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
 
       // visuals
       drawMetricsChart(data);
+      drawEfficiencyDials(data);
       drawSankey(data);
       drawBeaker(data);
+
     }
 
     // Run simulation
