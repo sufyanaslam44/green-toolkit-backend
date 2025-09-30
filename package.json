@@ -20,6 +20,7 @@
   "homepage": "https://github.com/sufyanaslam44/green-toolkit-backend#readme",
   "devDependencies": {
     "eslint": "^9.36.0",
-    "eslint-plugin-html": "^8.1.3"
+    "eslint-plugin-html": "^8.1.3",
+    "typescript": "^5.9.2"
   }
 }

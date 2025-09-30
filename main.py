@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict, Any
 from pathlib import Path
 from math import isfinite
-from typing import Optional, List, Dict, Any  # (ensure these are imported)
 import os
 
 # ------------------------------------------------------------------------------
@@ -30,9 +29,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 @app.get("/api/health")
 def health():
     return {"ok": True}
-class SFDetail(BaseModel):
-    name: Optional[str] = None
-    excess_ratio: float
+
 # ------------------------------------------------------------------------------
 # Atom Economy API
 # ------------------------------------------------------------------------------
@@ -53,7 +50,6 @@ def calc_atom_economy(payload: AtomEconomyIn):
 # ------------------------------------------------------------------------------
 # E-factor APIs
 # ------------------------------------------------------------------------------
-# (1) Total-in based: E = (total_in - product) / product   [kept for compatibility]
 class EFactorIn(BaseModel):
     total_mass_in: float = Field(gt=0, description="Total mass of inputs (g)")
     product_mass: float = Field(gt=0, description="Mass of desired product (g)")
@@ -68,7 +64,6 @@ def calc_e_factor(payload: EFactorIn):
     e = (payload.total_mass_in - payload.product_mass) / payload.product_mass
     return {"e_factor": round(e, 4)}
 
-# (2) Direct definition: E = waste / product
 class EFactorDirectIn(BaseModel):
     waste_mass: float = Field(ge=0, description="Mass of waste (g)")
     product_mass: float = Field(gt=0, description="Mass of desired product (g)")
@@ -93,7 +88,6 @@ class PMIOut(BaseModel):
 
 @app.post("/api/pmi", response_model=PMIOut)
 def calc_pmi(payload: PMIIn):
-    # PMI = total mass in / product mass
     pmi = payload.total_mass_in / payload.product_mass
     return {"pmi": round(pmi, 4)}
 
@@ -110,7 +104,6 @@ class WaterImpactOut(BaseModel):
 
 @app.post("/api/water-impact", response_model=WaterImpactOut)
 def calc_water_impact(payload: WaterImpactIn):
-    # L per g and L per kg product
     lpg = payload.water_liters / payload.product_mass_g
     lpk = lpg * 1000.0
     return {"liters_per_g": round(lpg, 4), "liters_per_kg": round(lpk, 2)}
@@ -128,10 +121,10 @@ class EnergyImpactOut(BaseModel):
 
 @app.post("/api/energy-impact", response_model=EnergyImpactOut)
 def calc_energy_impact(payload: EnergyImpactIn):
-    # kWh per g and per kg product
     kwhpg = payload.kwh / payload.product_mass_g
     kwhpk = kwhpg * 1000.0
     return {"kwh_per_g": round(kwhpg, 6), "kwh_per_kg": round(kwhpk, 4)}
+
 # ------------------------------- RME API --------------------------------------
 class RMEIn(BaseModel):
     reactant_masses_g: List[float] = Field(min_items=1, description="List of reactant masses (g)")
@@ -172,6 +165,10 @@ def calc_carbon_efficiency(payload: CarbonEfficiencyIn):
     return {"carbon_efficiency_pct": round(ce, 2)}
 
 # ------------------------ Stoichiometric Factor API ---------------------------
+class SFDetail(BaseModel):
+    name: Optional[str] = None
+    excess_ratio: float
+
 class SFEntry(BaseModel):
     name: Optional[str] = None
     eq_used: float = Field(ge=0)
@@ -182,7 +179,7 @@ class StoichiometricFactorIn(BaseModel):
 
 class StoichiometricFactorOut(BaseModel):
     sf_overall: float
-    details: List[SFDetail]          # <-- RIGHT
+    details: List[SFDetail]
 
 @app.post("/api/stoichiometric-factor", response_model=StoichiometricFactorOut)
 def calc_stoichiometric_factor(payload: StoichiometricFactorIn):
@@ -194,7 +191,6 @@ def calc_stoichiometric_factor(payload: StoichiometricFactorIn):
     details = [{"name": s.name or f"species_{i+1}", "excess_ratio": round(s.eq_used / s.eq_stoich, 4)} 
                for i, s in enumerate(payload.species)]
     return {"sf_overall": round(overall, 4), "details": details}
-
 
 # ------------------------------------------------------------------------------
 # Reaction Impact Report (single JSON -> all metrics)
@@ -232,7 +228,7 @@ class Conditions(BaseModel):
     mode: Literal["hotplate", "microwave", "reflux", "other"] = "hotplate"
 
 class Options(BaseModel):
-    count_recovered_solvent_in_pmi: bool = False  # if True, include full solvent mass in PMI numerator
+    count_recovered_solvent_in_pmi: bool = False
     water_names: List[str] = Field(default_factory=lambda: ["water", "h2o", "deionized water"])
     energy_presets_kw: Dict[str, Dict[str, float]] = Field(default_factory=lambda: {
         "hotplate":  {"kw": 1.0, "duty": 0.35},
@@ -240,7 +236,7 @@ class Options(BaseModel):
         "reflux":    {"kw": 0.8, "duty": 0.60},
         "other":     {"kw": 0.6, "duty": 0.30},
     })
-    default_density_g_per_mL: float = 1.0  # used if solvent density not provided
+    default_density_g_per_mL: float = 1.0
 
 class ReactionImpactIn(BaseModel):
     product: Product
@@ -256,15 +252,12 @@ class ReactionImpactOut(BaseModel):
     e_factor: Optional[float]
     water_L_per_g: Optional[float]
     energy_kWh_per_g: Optional[float]
-    # NEW (optional Phase-1 metrics)
     rme_pct: Optional[float] = None
     carbon_efficiency_pct: Optional[float] = None
     sf_overall: Optional[float] = None
-    sf_details: Optional[List[SFDetail]] = None  # <-- RIGHT
+    sf_details: Optional[List[SFDetail]] = None
     breakdown: Dict[str, Any]
     ai_suggestions: List[str] = []
-
-
 
 def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     if not payload.reactants:
@@ -288,7 +281,6 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
         solvent_mass_total_g += mass_g
         nonrec_g = mass_g * (1.0 - s.recovery_pct/100.0)
         solvent_mass_nonrecovered_g += nonrec_g
-        # Count reaction solvent water into water usage if its name matches
         if s.name.strip().lower() in water_name_set:
             water_mL_total += s.volume_mL
 
@@ -298,23 +290,19 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     if product_mass_g <= 0:
         raise HTTPException(status_code=400, detail="Product mass must be > 0.")
 
-    # PMI numerator choice
     if opts.count_recovered_solvent_in_pmi:
         pmi_numerator_g = reactant_mass_g + solvent_mass_total_g + auxiliaries_g
     else:
         pmi_numerator_g = reactant_mass_g + solvent_mass_nonrecovered_g + auxiliaries_g
 
-    # Core metrics
     pmi = pmi_numerator_g / product_mass_g
     e_factor = (pmi_numerator_g - product_mass_g) / product_mass_g
 
     sum_reactant_mw = sum(r.mw for r in payload.reactants)
     atom_economy = (100.0 * p.mw / sum_reactant_mw) if sum_reactant_mw > 0 else None
 
-    # Water intensity (L/g)
     water_L_per_g = (water_mL_total / 1000.0) / product_mass_g
 
-    # Energy intensity (kWh/g), simple estimator
     mode = payload.conditions.mode
     time_h = payload.conditions.time_h or 0.0
     preset = opts.energy_presets_kw.get(mode, opts.energy_presets_kw["other"])
@@ -336,15 +324,11 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
         }
     }
 
-    # --- RME: product mass / (sum of reactant masses consumed) ---
     rme_pct = None
-    reactant_mass_g = sum(r.mass_g for r in payload.reactants)  # already computed above
+    reactant_mass_g = sum(r.mass_g for r in payload.reactants)
     if product_mass_g > 0 and reactant_mass_g > 0:
         rme_pct = round((product_mass_g / reactant_mass_g) * 100.0, 2)
 
-    # --- Carbon Efficiency ---
-    # definition: (n_product * C_product) / sum(n_reactant_i * C_reactant_i) * 100
-    # n_i (moles) = mass_g / MW ; requires carbon_atoms for product & reactants
     carbon_efficiency_pct = None
     try:
         if payload.product.carbon_atoms is not None and all(
@@ -359,11 +343,8 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
             if totalC_in > 0:
                 carbon_efficiency_pct = round((totalC_out / totalC_in) * 100.0, 2)
     except Exception:
-        pass  # keep None if inputs invalid
+        pass
 
-    # --- Stoichiometric Factor (overall & per-reactant excess) ---
-    # For each reactant with eq_used & eq_stoich, compute ratio = eq_used / eq_stoich
-    # Overall SF = (Σ eq_used) / (Σ eq_stoich)
     sf_overall = None
     sf_details = None
     try:
@@ -379,7 +360,6 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     except Exception:
         pass
 
-    # breakdown already defined above; just return extended fields:
     return ReactionImpactOut(
         atom_economy_pct = round(atom_economy, 2) if atom_economy is not None else None,
         pmi = round(pmi, 3),
@@ -404,19 +384,58 @@ def reaction_impact(payload: ReactionImpactIn):
         raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
 
 # ------------------------------------------------------------------------------
-# Pages
+# Pages (Jinja templates)
 # ------------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     context = {"request": request, "title": "Green Toolkit", "subtitle": "We are ready to build green tool"}
     return templates.TemplateResponse("index.html", context)
 
+@app.get("/gamification", response_class=HTMLResponse)
+def gamification_page(request: Request):
+    context = {"request": request, "title": "Gamification"}
+    return templates.TemplateResponse("gamification.html", context)
+
 @app.get("/tools", response_class=HTMLResponse)
 def tools_page(request: Request):
     context = {"request": request, "title": "Tools & Calculators"}
     return templates.TemplateResponse("tools.html", context)
+
 @app.get("/simulate", response_class=HTMLResponse)
 def simulate_page(request: Request):
     context = {"request": request, "title": "Simulations"}
     return templates.TemplateResponse("sim.html", context)
 
+# ------------------------------------------------------------------------------
+# One-App Mode: serve the built Vite frontend (SPA) at /app
+# ------------------------------------------------------------------------------
+def _pick_frontend_dist() -> Optional[Path]:
+    """Try to find a Vite 'dist' folder. Override with env FRONTEND_DIST."""
+    env_path = os.getenv("FRONTEND_DIST")
+    if env_path:
+        p = Path(env_path)
+        if p.is_dir():
+            return p
+
+    # Common locations (adjust if your layout differs)
+    candidates = [
+        BASE_DIR / "dist",
+        BASE_DIR / "frontend" / "dist",
+        BASE_DIR / "vite_project_1" / "dist",
+        BASE_DIR.parent / "frontend" / "dist",
+        BASE_DIR.parent / "vite_project_1" / "dist",
+    ]
+    for c in candidates:
+        if c.is_dir():
+            return c
+    return None
+
+_frontend_dist = _pick_frontend_dist()
+if _frontend_dist:
+    app.mount("/app", StaticFiles(directory=str(_frontend_dist), html=True), name="app")
+else:
+    # Not fatal—just print a hint. Build your Vite app to create dist/.
+    print(
+        "[One-App Mode] Vite 'dist' not found. Set FRONTEND_DIST env var or build your frontend "
+        "(e.g. cd vite_project_1 && pnpm build)."
+    )

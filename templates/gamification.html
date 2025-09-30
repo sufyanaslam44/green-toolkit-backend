@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+  <!-- Header -->
+  <header class="bg-white border-b">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <a class="flex items-center gap-2" href="/">
+        <div class="h-8 w-8 rounded-xl bg-emerald-600"></div>
+        <span class="text-xl font-semibold">Green Toolkit</span>
+      </a>
+      <nav class="flex gap-4 text-sm">
+        <a class="hover:text-emerald-700" href="/">Home</a>
+        <a class="hover:text-emerald-700" href="#tools">Tools</a>
+        <a class="hover:text-emerald-700" href="/simulate">Simulations</a>
+        <a class="hover:text-emerald-700" href="/gamification">Gamification</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-3xl font-bold mb-6">Gamification: Save the Earth 🌍</h1>
+    <p class="mb-4 text-gray-700">Welcome to Level 1: Atom Economy ✨</p>
+
+    <!-- Placeholder for game visualization -->
+    <div id="game-container" class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+      <p class="text-gray-500">[Game area placeholder]</p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-12 border-t">
+    <div class="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
+      © <span id="year"></span> Green Toolkit • Built with FastAPI + Tailwind • Aligned with SDGs
+    </div>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
