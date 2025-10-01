@@ -75,9 +75,6 @@
     <input id="prod_carbon" type="number" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 9">
   </label>
 </div>
-
-      
-
       <!-- Reactants (compact card list) -->
       <div class="mt-5">
         <div class="flex items-center justify-between">
@@ -85,10 +82,7 @@
           <button id="add-reactant" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
         </div>
         <div id="reactants" class="mt-2 grid gap-2"></div>
-        
-
-
-
+      
       </div>
 
       <!-- Solvents (compact card list) -->
@@ -282,53 +276,102 @@
     const solventsBox = $('#solvents');
 
      function reactantCard(data = {}) {
+  const card = el('div', 'border rounded-lg p-3 grid gap-2');
+  card.innerHTML = `
+    <!-- Row 1: Name | MW -->
+    <div class="flex flex-wrap items-end gap-6">
+      <label class="grid">
+        <span class="text-xs text-gray-700">Name</span>
+        <input class="r_name border rounded-lg px-3 py-2 text-xs w-32"
+               placeholder="name" title="Name"
+               value="${data.name||''}">
+      </label>
+      <label class="grid">
+        <span class="text-xs text-gray-700">MW (g/mol)</span>
+        <input class="r_mw border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="MW" title="MW (g/mol)"
+               value="${data.mw||''}">
+      </label>
+    </div>
+
+    <!-- Row 2: Mass | C atoms -->
+    <div class="flex flex-wrap items-end gap-6">
+      <label class="grid">
+        <span class="text-xs text-gray-700">Mass (g)</span>
+        <input class="r_mass border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="mass g" title="Mass (g)"
+               value="${data.mass_g||''}">
+      </label>
+      <label class="grid">
+        <span class="text-xs text-gray-700">C atoms</span>
+        <input class="r_c border rounded-lg px-3 py-2 text-xs w-24" type="number" min="0"
+               placeholder="C atoms" title="C atoms"
+               value="${data.carbon_atoms||''}">
+      </label>
+    </div>
+
+    <!-- Row 3: eq used | eq stoich | remove -->
+    <div class="flex flex-wrap items-end gap-6">
+      <label class="grid">
+        <span class="text-xs text-gray-700">eq used</span>
+        <input class="r_eu border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="eq used" title="eq used"
+               value="${data.eq_used||''}">
+      </label>
+      <label class="grid">
+        <span class="text-xs text-gray-700">eq stoich</span>
+        <input class="r_es border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="eq stoich" title="eq stoich"
+               value="${data.eq_stoich||''}">
+      </label>
+      <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
+    </div>
+  `;
+  card.querySelector('.rmv').onclick = () => card.remove();
+  return card;
+}
+
+  function solventCard(data = {}) {
     const card = el('div', 'border rounded-lg p-3 grid gap-2');
     card.innerHTML = `
-      <!-- Row 1: name, MW, mass -->
-      <div class="grid grid-cols-3 gap-2">
-        <input class="r_name border rounded px-2 py-1 text-xs" placeholder="name" value="${data.name||''}">
-        <input class="r_mw   border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="MW" value="${data.mw||''}">
-        <input class="r_mass border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mass g" value="${data.mass_g||''}">
+      <!-- Row 1: Solvent | mL (match Product sizing & gap) -->
+      <div class="flex flex-wrap items-end gap-6">
+        <label class="grid">
+          <span class="text-xs text-gray-700">Solvent</span>
+          <input class="s_name border rounded-lg px-3 py-2 text-xs w-32"
+                 placeholder="solvent" title="Solvent"
+                 value="${data.name||''}">
+        </label>
+        <label class="grid">
+          <span class="text-xs text-gray-700">mL</span>
+          <input class="s_vol border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+                 placeholder="mL" title="mL"
+                 value="${data.volume_mL||''}">
+        </label>
       </div>
 
-      <!-- Row 2: carbon atoms, eq used -->
-      <div class="grid grid-cols-2 gap-2">
-        <input class="r_c  border rounded px-2 py-1 text-xs" type="number" min="0" placeholder="C atoms" value="${data.carbon_atoms||''}">
-        <input class="r_eu border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq used" value="${data.eq_used||''}">
-      </div>
-
-      <!-- Row 3: eq stoich, remove -->
-      <div class="grid grid-cols-2 gap-2 items-center">
-        <input class="r_es border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="eq stoich" value="${data.eq_stoich||''}">
-        <button type="button" class="rmv justify-self-start rounded border px-3 py-1 text-xs">x</button>
+      <!-- Row 2: density | % rec | remove -->
+      <div class="flex flex-wrap items-end gap-6">
+        <label class="grid">
+          <span class="text-xs text-gray-700">density g/mL</span>
+          <input class="s_den border rounded-lg px-3 py-2 text-xs w-28" type="number" step="any" min="0"
+                 placeholder="density g/mL" title="density g/mL"
+                 value="${data.density_g_per_mL||''}">
+        </label>
+        <label class="grid">
+          <span class="text-xs text-gray-700">% rec</span>
+          <div class="flex items-end gap-2">
+            <input class="s_rec border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0" max="100"
+                   placeholder="% rec" title="% rec"
+                   value="${data.recovery_pct||''}">
+            <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
+          </div>
+        </label>
       </div>
     `;
     card.querySelector('.rmv').onclick = () => card.remove();
     return card;
   }
-
-   function solventCard(data = {}) {
-    const card = el('div', 'border rounded-lg p-3 grid gap-2');
-    card.innerHTML = `
-      <!-- Row 1: solvent, mL -->
-      <div class="grid grid-cols-2 gap-2">
-        <input class="s_name border rounded px-2 py-1 text-xs" placeholder="solvent" value="${data.name||''}">
-        <input class="s_vol  border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="mL" value="${data.volume_mL||''}">
-      </div>
-
-      <!-- Row 2: density, % rec + remove -->
-      <div class="grid grid-cols-2 gap-2 items-center">
-        <input class="s_den border rounded px-2 py-1 text-xs" type="number" step="any" min="0" placeholder="density g/mL" value="${data.density_g_per_mL||''}">
-        <div class="flex gap-2">
-          <input class="s_rec border rounded px-2 py-1 text-xs w-24" type="number" step="any" min="0" max="100" placeholder="% rec" value="${data.recovery_pct||''}">
-          <button type="button" class="rmv rounded border px-3 py-1 text-xs">x</button>
-        </div>
-      </div>
-    `;
-    card.querySelector('.rmv').onclick = () => card.remove();
-    return card;
-  }
-
     // Add default cards
     if (!reactantsBox.children.length) reactantsBox.appendChild(reactantCard());
     if (!solventsBox.children.length)  solventsBox.appendChild(solventCard());
