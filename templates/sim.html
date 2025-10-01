@@ -658,8 +658,8 @@ $('#load-example').onclick = () => {
 
   // Solvents
   solventsBox.innerHTML = '';
-  solventsBox.appendChild(solventCard({name:'ethyl acetate', mass_g:45.1, recovery_pct:60}));
-  solventsBox.appendChild(solventCard({name:'water', mass_g:150, recovery_pct:0}));
+  solventsBox.appendChild(solventCard({name:'ethyl acetate', mass_g:45.1, boiling_point:77, recovery_pct:60}));
+  solventsBox.appendChild(solventCard({name:'water', mass_g:150, boiling_point:100, recovery_pct:0}));
 
   // Catalysts
   catalystsBox.innerHTML = '';
@@ -671,7 +671,13 @@ $('#load-example').onclick = () => {
   $('#cond_mode').value = 'hotplate';
   $('#cond_time').value = 1.5;       $('#lbl_time').textContent = '1.5 h';
   $('#cond_temp').value = 70;        $('#lbl_temp').textContent = '70 °C';
+  $('#cond_pressure').value = 1;     $('#lbl_pressure').textContent = '1 atm';
   $('#opt_pmi_recovered').checked = false;
+  
+  // Update slider fill colors
+  updateSliderFill(timeSlider);
+  updateSliderFill(tempSlider);
+  updateSliderFill(pressureSlider);
 
   // (optional) auto-run so CE & SF show immediately:
   // runSim();
