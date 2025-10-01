@@ -213,13 +213,17 @@ class Reactant(BaseModel):
 
 class Solvent(BaseModel):
     name: str
-    volume_mL: float = Field(ge=0)
-    density_g_per_mL: Optional[float] = Field(default=None, ge=0)
+    mass_g: float = Field(ge=0, description="Mass of solvent (g)")
     recovery_pct: float = Field(default=0, ge=0, le=100)
 
+class Catalyst(BaseModel):
+    name: Optional[str] = None
+    mw: float = Field(gt=0, description="Molecular weight (g/mol)")
+    mass_g: float = Field(ge=0, description="Mass of catalyst (g)")
+
 class Workup(BaseModel):
-    aqueous_washes_mL: float = Field(default=0, ge=0)
-    organic_rinses_mL: float = Field(default=0, ge=0)
+    aqueous_washes_g: float = Field(default=0, ge=0)
+    organic_rinses_g: float = Field(default=0, ge=0)
     drying_agents_g: float = Field(default=0, ge=0)
 
 class Conditions(BaseModel):
@@ -242,6 +246,7 @@ class ReactionImpactIn(BaseModel):
     product: Product
     reactants: List[Reactant]
     solvents: List[Solvent] = Field(default_factory=list)
+    catalysts: List[Catalyst] = Field(default_factory=list)
     workup: Workup = Workup()
     conditions: Conditions = Conditions()
     options: Options = Options()
@@ -271,37 +276,46 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     # Solvent mass (g) with recovery
     solvent_mass_total_g = 0.0
     solvent_mass_nonrecovered_g = 0.0
-    water_mL_total = float(payload.workup.aqueous_washes_mL)
-
+    
+    # Track water separately for water intensity metric (includes aqueous washes + water solvents)
+    water_g_total = float(payload.workup.aqueous_washes_g)
     water_name_set = {n.lower() for n in opts.water_names}
 
     for s in payload.solvents:
-        dens = s.density_g_per_mL if s.density_g_per_mL is not None else opts.default_density_g_per_mL
-        mass_g = s.volume_mL * dens
+        mass_g = s.mass_g
         solvent_mass_total_g += mass_g
         nonrec_g = mass_g * (1.0 - s.recovery_pct/100.0)
         solvent_mass_nonrecovered_g += nonrec_g
+        # Count reaction solvent water into water usage for water intensity metric only
         if s.name.strip().lower() in water_name_set:
-            water_mL_total += s.volume_mL
+            water_g_total += s.mass_g
 
     auxiliaries_g = payload.workup.drying_agents_g
+
+    # Catalyst mass
+    catalyst_mass_g = sum(c.mass_g for c in payload.catalysts)
 
     product_mass_g = p.actual_mass_g
     if product_mass_g <= 0:
         raise HTTPException(status_code=400, detail="Product mass must be > 0.")
 
-    if opts.count_recovered_solvent_in_pmi:
-        pmi_numerator_g = reactant_mass_g + solvent_mass_total_g + auxiliaries_g
-    else:
-        pmi_numerator_g = reactant_mass_g + solvent_mass_nonrecovered_g + auxiliaries_g
+    # PMI (Process Mass Intensity) = Total Mass of All Input Materials / Mass of Final Product
+    # Total Input = Reactants + Catalysts + ALL Solvents + Aqueous washes + auxiliaries (drying agents)
+    # PMI counts ALL materials that enter the process, regardless of recovery
+    total_input_mass_g = reactant_mass_g + catalyst_mass_g + solvent_mass_total_g + payload.workup.aqueous_washes_g + auxiliaries_g
 
-    pmi = pmi_numerator_g / product_mass_g
-    e_factor = (pmi_numerator_g - product_mass_g) / product_mass_g
+    pmi = total_input_mass_g / product_mass_g if product_mass_g > 0 else 0
+    
+    # E-factor = (Total mass in - Product mass out) / Product mass out
+    # Standard E-factor uses ALL inputs, same as PMI
+    # E-factor represents waste generation: higher E-factor = more waste per unit product
+    e_factor = (total_input_mass_g - product_mass_g) / product_mass_g
 
     sum_reactant_mw = sum(r.mw for r in payload.reactants)
     atom_economy = (100.0 * p.mw / sum_reactant_mw) if sum_reactant_mw > 0 else None
 
-    water_L_per_g = (water_mL_total / 1000.0) / product_mass_g
+    # Water intensity (L/g) - convert g to L assuming water density = 1 g/mL
+    water_L_per_g = (water_g_total / 1000.0) / product_mass_g
 
     mode = payload.conditions.mode
     time_h = payload.conditions.time_h or 0.0
@@ -311,12 +325,14 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
 
     breakdown = {
         "reactant_mass_g": round(reactant_mass_g, 4),
+        "catalyst_mass_g": round(catalyst_mass_g, 4),
         "solvent_mass_total_g": round(solvent_mass_total_g, 4),
         "solvent_mass_nonrecovered_g": round(solvent_mass_nonrecovered_g, 4),
         "auxiliaries_g": round(auxiliaries_g, 4),
-        "pmi_numerator_g": round(pmi_numerator_g, 4),
+        "aqueous_washes_g": round(payload.workup.aqueous_washes_g, 2),
+        "total_input_mass_g": round(total_input_mass_g, 4),
         "product_mass_g": round(product_mass_g, 4),
-        "water_total_mL": round(water_mL_total, 2),
+        "water_total_g": round(water_g_total, 2),
         "energy_kWh_total_est": round(kwh, 4),
         "energy_mode": mode,
         "options": {

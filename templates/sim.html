@@ -93,13 +93,21 @@
         </div>
         <div id="solvents" class="mt-2 grid gap-2"></div>
       </div>
+       <!-- Catalysts (compact card list) -->
+<div class="mt-5">
+  <div class="flex items-center justify-between">
+    <h2 class="text-sm font-medium">Catalysts</h2>
+    <button id="add-catalyst" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+  </div>
+  <div id="catalysts" class="mt-2 grid gap-2"></div>
+</div>
 
       <!-- Workup + Conditions (sliders like PhET) -->
       <div class="mt-5 grid gap-4">
         <div>
           <div class="flex items-center justify-between">
-            <label class="text-sm font-medium">Aqueous washes (mL)</label>
-            <span id="lbl_washes" class="text-xs text-gray-500">0 mL</span>
+            <label class="text-sm font-medium">Aqueous washes (g)</label>
+            <span id="lbl_washes" class="text-xs text-gray-500">0 g</span>
           </div>
           <input id="workup_washes" class="w-full knob" type="range" min="0" max="500" value="0">
         </div>
@@ -112,40 +120,36 @@
           <input id="workup_drying" class="w-full knob" type="range" min="0" max="10" value="0" step="0.1">
         </div>
 
-       <!-- Workup + Conditions -->
-<div class="mt-5 grid gap-4">
-  <!-- (keep Aqueous washes & Drying agents sliders as-is) -->
+        <!-- Conditions: vertical order Mode → Time → Temp -->
+        <div class="grid gap-3">
+          <label class="grid">
+            <span class="text-sm font-medium">Mode</span>
+            <select id="cond_mode" class="border rounded-lg px-2 py-2">
+              <option value="hotplate">🔥 Hotplate</option>
+              <option value="microwave">⚡ Microwave</option>
+              <option value="reflux">♻ Reflux</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
 
-  <!-- Conditions: vertical order Mode → Time → Temp -->
-  <div class="grid gap-3">
-    <label class="grid">
-      <span class="text-sm font-medium">Mode</span>
-      <select id="cond_mode" class="border rounded-lg px-2 py-2">
-        <option value="hotplate">🔥 Hotplate</option>
-        <option value="microwave">⚡ Microwave</option>
-        <option value="reflux">♻ Reflux</option>
-        <option value="other">Other</option>
-      </select>
-    </label>
+          <label class="grid">
+            <span class="text-sm font-medium">Time (h)</span>
+            <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
+            <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
+          </label>
 
-    <label class="grid">
-      <span class="text-sm font-medium">Time (h)</span>
-      <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
-      <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
-    </label>
+          <label class="grid">
+            <span class="text-sm font-medium">Temp (°C)</span>
+            <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
+            <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
+          </label>
+        </div>
 
-    <label class="grid">
-      <span class="text-sm font-medium">Temp (°C)</span>
-      <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
-      <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
-    </label>
-  </div>
-
-  <label class="inline-flex items-center gap-2">
-    <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
-    <span class="text-xs">Include recovered solvent in PMI numerator</span>
-  </label>
-</div>
+        <label class="inline-flex items-center gap-2">
+          <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
+          <span class="text-xs">Include recovered solvent in PMI numerator</span>
+        </label>
+      </div>
 
 
       <div class="mt-5 flex items-center gap-2">
@@ -274,7 +278,7 @@
     // Reactant / solvent compact cards
     const reactantsBox = $('#reactants');
     const solventsBox = $('#solvents');
-
+    const catalystsBox = $('#catalysts');
      function reactantCard(data = {}) {
   const card = el('div', 'border rounded-lg p-3 grid gap-2');
   card.innerHTML = `
@@ -334,7 +338,7 @@
   function solventCard(data = {}) {
     const card = el('div', 'border rounded-lg p-3 grid gap-2');
     card.innerHTML = `
-      <!-- Row 1: Solvent | mL (match Product sizing & gap) -->
+      <!-- Row 1: Solvent | Mass (g) -->
       <div class="flex flex-wrap items-end gap-6">
         <label class="grid">
           <span class="text-xs text-gray-700">Solvent</span>
@@ -343,42 +347,69 @@
                  value="${data.name||''}">
         </label>
         <label class="grid">
-          <span class="text-xs text-gray-700">mL</span>
-          <input class="s_vol border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
-                 placeholder="mL" title="mL"
-                 value="${data.volume_mL||''}">
+          <span class="text-xs text-gray-700">Mass (g)</span>
+          <input class="s_mass border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+                 placeholder="Mass g" title="Mass (g)"
+                 value="${data.mass_g||''}">
         </label>
       </div>
 
-      <!-- Row 2: density | % rec | remove -->
+      <!-- Row 2: % rec | remove -->
       <div class="flex flex-wrap items-end gap-6">
         <label class="grid">
-          <span class="text-xs text-gray-700">density g/mL</span>
-          <input class="s_den border rounded-lg px-3 py-2 text-xs w-28" type="number" step="any" min="0"
-                 placeholder="density g/mL" title="density g/mL"
-                 value="${data.density_g_per_mL||''}">
-        </label>
-        <label class="grid">
           <span class="text-xs text-gray-700">% rec</span>
-          <div class="flex items-end gap-2">
-            <input class="s_rec border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0" max="100"
-                   placeholder="% rec" title="% rec"
-                   value="${data.recovery_pct||''}">
-            <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
-          </div>
+          <input class="s_rec border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0" max="100"
+                 placeholder="% rec" title="% rec"
+                 value="${data.recovery_pct||''}">
         </label>
+        <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
       </div>
     `;
     card.querySelector('.rmv').onclick = () => card.remove();
     return card;
   }
+  function catalystCard(data = {}) {
+  const card = el('div', 'border rounded-lg p-3 grid gap-2');
+  card.innerHTML = `
+    <!-- Row 1: Name | MW -->
+    <div class="flex flex-wrap items-end gap-6">
+      <label class="grid">
+        <span class="text-xs text-gray-700">Name</span>
+        <input class="c_name border rounded-lg px-3 py-2 text-xs w-32"
+               placeholder="catalyst" title="Name"
+               value="${data.name||''}">
+      </label>
+      <label class="grid">
+        <span class="text-xs text-gray-700">MW (g/mol)</span>
+        <input class="c_mw border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="MW" title="MW (g/mol)"
+               value="${data.mw||''}">
+      </label>
+    </div>
+
+    <!-- Row 2: Mass | remove -->
+    <div class="flex flex-wrap items-end gap-6">
+      <label class="grid">
+        <span class="text-xs text-gray-700">Mass (g)</span>
+        <input class="c_mass border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+               placeholder="Mass g" title="Mass (g)"
+               value="${data.mass_g||''}">
+      </label>
+      <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
+    </div>
+  `;
+  card.querySelector('.rmv').onclick = () => card.remove();
+  return card;
+}
+
     // Add default cards
     if (!reactantsBox.children.length) reactantsBox.appendChild(reactantCard());
     if (!solventsBox.children.length)  solventsBox.appendChild(solventCard());
-
+    if (!catalystsBox.children.length) catalystsBox.appendChild(catalystCard());
     // Add buttons
     $('#add-reactant').onclick = () => reactantsBox.appendChild(reactantCard());
     $('#add-solvent').onclick  = () => solventsBox.appendChild(solventCard());
+    $('#add-catalyst').onclick = () => catalystsBox.appendChild(catalystCard());
 
     // Labels for sliders
     function bindLabel(inputId, labelId, suffix) {
@@ -388,7 +419,7 @@
       const upd = () => label.textContent = `${input.value} ${suffix}`;
       input.addEventListener('input', upd); upd();
     }
-    bindLabel('workup_washes', 'lbl_washes', 'mL');
+    bindLabel('workup_washes', 'lbl_washes', 'g');
     bindLabel('workup_drying', 'lbl_drying', 'g');
     bindLabel('cond_time', 'lbl_time', 'h');
     bindLabel('cond_temp', 'lbl_temp', '°C');
@@ -414,12 +445,16 @@ $('#load-example').onclick = () => {
 
   // Solvents
   solventsBox.innerHTML = '';
-  solventsBox.appendChild(solventCard({name:'ethyl acetate', volume_mL:50, density_g_per_mL:0.902, recovery_pct:60}));
-  solventsBox.appendChild(solventCard({name:'water', volume_mL:150, recovery_pct:0}));
+  solventsBox.appendChild(solventCard({name:'ethyl acetate', mass_g:45.1, recovery_pct:60}));
+  solventsBox.appendChild(solventCard({name:'water', mass_g:150, recovery_pct:0}));
+
+  // Catalysts
+  catalystsBox.innerHTML = '';
+  catalystsBox.appendChild(catalystCard({name:'sulfuric acid', mw:98.08, mass_g:0.5}));
 
   // Workup & conditions
-  $('#workup_washes').value = 100;   $('#lbl_washes').textContent = '100 mL';
-  $('#workup_drying').value = 2;     $('#lbl_drying').textContent = '2 g';
+  $('#workup_washes').value = 100;   $('#lbl_washes').textContent = '100 g';
+  $('#workup_drying').value = 0;     $('#lbl_drying').textContent = '0 g';
   $('#cond_mode').value = 'hotplate';
   $('#cond_time').value = 1.5;       $('#lbl_time').textContent = '1.5 h';
   $('#cond_temp').value = 70;        $('#lbl_temp').textContent = '70 °C';
@@ -449,23 +484,31 @@ const reactants = [...reactantsBox.children].map(r => ({
 
       const solvents = [...solventsBox.children].map(s => ({
         name: s.querySelector('.s_name').value || '',
-        volume_mL: toNum(s.querySelector('.s_vol').value) || 0,
-        density_g_per_mL: toNum(s.querySelector('.s_den').value) || null,
+        mass_g: toNum(s.querySelector('.s_mass').value) || 0,
         recovery_pct: toNum(s.querySelector('.s_rec').value) || 0
-      })).filter(x => x.name && x.volume_mL >= 0);
+      })).filter(x => x.name && x.mass_g >= 0);
+      
+      const catalysts = [...catalystsBox.children].map(c => ({
+        mw: toNum(c.querySelector('.c_mw').value),
+        mass_g: toNum(c.querySelector('.c_mass').value)
+      })).filter(x => (x.mw > 0 && x.mass_g >= 0));
+
       const workup = {
-        aqueous_washes_mL: toNum($('#workup_washes').value) || 0,
-        organic_rinses_mL: 0,
+        aqueous_washes_g: toNum($('#workup_washes').value) || 0,
+        organic_rinses_g: 0,
         drying_agents_g: toNum($('#workup_drying').value) || 0
       };
+      
       const conditions = {
         temp_C: toNum($('#cond_temp').value) || null,
         time_h: toNum($('#cond_time').value) || 0,
         mode: $('#cond_mode').value
       };
+      
       const options = {
         count_recovered_solvent_in_pmi: $('#opt_pmi_recovered').checked
       };
+      
       return { product, reactants, solvents, workup, conditions, options };
     }
 
