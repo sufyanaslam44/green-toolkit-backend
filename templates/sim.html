@@ -515,8 +515,14 @@
         </label>
       </div>
 
-      <!-- Row 2: % rec | remove -->
+      <!-- Row 2: B.P | % rec | remove -->
       <div class="flex flex-wrap items-end gap-6">
+        <label class="grid">
+          <span class="text-xs text-gray-700">B.P (°C)</span>
+          <input class="s_bp border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any"
+                 placeholder="B.P" title="Boiling Point (°C)"
+                 value="${data.boiling_point||''}">
+        </label>
         <label class="grid">
           <span class="text-xs text-gray-700">% rec</span>
           <input class="s_rec border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0" max="100"
@@ -699,6 +705,7 @@ const reactants = [...reactantsBox.children].map(r => ({
       const solvents = [...solventsBox.children].map(s => ({
         name: s.querySelector('.s_name').value || '',
         mass_g: toNum(s.querySelector('.s_mass').value) || 0,
+        boiling_point: toNum(s.querySelector('.s_bp')?.value) || null,
         recovery_pct: toNum(s.querySelector('.s_rec').value) || 0
       })).filter(x => x.name && x.mass_g >= 0);
       
