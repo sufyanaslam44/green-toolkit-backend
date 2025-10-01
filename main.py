@@ -255,7 +255,7 @@ class ReactionImpactOut(BaseModel):
     atom_economy_pct: Optional[float]
     pmi: Optional[float]
     e_factor: Optional[float]
-    water_L_per_g: Optional[float]
+    water_mL_per_g: Optional[float]
     energy_kWh_per_g: Optional[float]
     rme_pct: Optional[float] = None
     carbon_efficiency_pct: Optional[float] = None
@@ -314,8 +314,8 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
     sum_reactant_mw = sum(r.mw for r in payload.reactants)
     atom_economy = (100.0 * p.mw / sum_reactant_mw) if sum_reactant_mw > 0 else None
 
-    # Water intensity (L/g) - convert g to L assuming water density = 1 g/mL
-    water_L_per_g = (water_g_total / 1000.0) / product_mass_g
+    # Water intensity (mL/g) - water_g_total in grams = mL (since water density = 1 g/mL)
+    water_mL_per_g = (water_g_total / product_mass_g) if product_mass_g > 0 else 0
 
     mode = payload.conditions.mode
     time_h = payload.conditions.time_h or 0.0
@@ -380,7 +380,7 @@ def compute_impact(payload: ReactionImpactIn) -> ReactionImpactOut:
         atom_economy_pct = round(atom_economy, 2) if atom_economy is not None else None,
         pmi = round(pmi, 3),
         e_factor = round(e_factor, 3),
-        water_L_per_g = round(water_L_per_g, 4),
+        water_mL_per_g = round(water_mL_per_g, 2),
         energy_kWh_per_g = round(energy_kWh_per_g, 6) if energy_kWh_per_g is not None else None,
         rme_pct = rme_pct,
         carbon_efficiency_pct = carbon_efficiency_pct,

@@ -176,7 +176,7 @@
       <div id="r_ef" class="text-2xl font-semibold">—</div>
     </div>
     <div class="border rounded-lg p-3">
-      <div class="text-gray-500 text-xs">Water (L/g)</div>
+      <div class="text-gray-500 text-xs">Water (mL/g)</div>
       <div id="r_water" class="text-2xl font-semibold">—</div>
     </div>
     <div class="border rounded-lg p-3">
@@ -204,17 +204,15 @@
       <div class="flex items-center justify-between">
         <h2 class="text-sm font-medium">Impact Metrics</h2>
         <div class="flex gap-1">
-          <span class="badge bg-green-100 text-green-800">good</span>
-          <span class="badge bg-yellow-100 text-yellow-800">ok</span>
-          <span class="badge bg-red-100 text-red-800">needs work</span>
+          <span class="badge" style="background-color: #10B981; color: white;">good</span>
+          <span class="badge" style="background-color: #F59E0B; color: white;">ok</span>
+          <span class="badge" style="background-color: #EF4444; color: white;">needs work</span>
         </div>
       </div>
       <canvas id="metricsChart" class="mt-4"></canvas>
     </div>
 <!-- Efficiency dials (AE, RME, Carbon Efficiency) -->
 <div class="border rounded-xl p-4 md:col-span-2 overflow-hidden">
-  <h2 class="text-sm font-medium">Efficiency (0–100%)</h2>
-
   <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-8 place-items-center">
     <div class="flex flex-col items-center">
       <div class="dial-wrap"><canvas id="dialAE"  class="dial"></canvas></div>
@@ -512,20 +510,50 @@ const reactants = [...reactantsBox.children].map(r => ({
       return { product, reactants, solvents, workup, conditions, options };
     }
 
-    // Metrics chart
+    // Metrics chart with color coding based on thresholds
     let metricsChart;
     function drawMetricsChart(data) {
-      const labels = ['PMI','E-factor','Water (L/g)','Energy (kWh/g)'];
-      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_L_per_g ?? null, data.energy_kWh_per_g ?? null];
+      const labels = ['PMI','E-factor','Water (mL/g)','Energy (kWh/g)'];
+      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_mL_per_g ?? null, data.energy_kWh_per_g ?? null];
+      
+      // Color coding based on green chemistry thresholds (lower is better)
+      // Green: good, Yellow: ok, Red: needs work
+      const thresholds = [
+        { good: 10, ok: 30 },    // PMI
+        { good: 5, ok: 10 },     // E-factor
+        { good: 20, ok: 50 },    // Water (mL/g)
+        { good: 5, ok: 10 }      // Energy (kWh/g)
+      ];
+      
+      const colors = values.map((val, idx) => {
+        if (val === null || val === undefined) return '#9CA3AF'; // gray for null
+        const t = thresholds[idx];
+        if (val < t.good) return '#10B981'; // green-500 (good)
+        if (val < t.ok) return '#F59E0B';   // yellow-500 (ok)
+        return '#EF4444';                    // red-500 (needs work)
+      });
+      
       const ctx = document.getElementById('metricsChart').getContext('2d');
       if (metricsChart) {
         metricsChart.data.datasets[0].data = values;
+        metricsChart.data.datasets[0].backgroundColor = colors;
         metricsChart.update(); return;
       }
       metricsChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Impact', data: values }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        data: { 
+          labels, 
+          datasets: [{ 
+            label: 'Impact', 
+            data: values,
+            backgroundColor: colors
+          }] 
+        },
+        options: { 
+          responsive: true, 
+          plugins: { legend: { display: false } }, 
+          scales: { y: { beginAtZero: true } } 
+        }
       });
     }
  // Center-number plugin (NOT registered globally)
@@ -584,10 +612,11 @@ function makeDial(canvas, value, color) {
     plugins: [DialCenterText]       // keep plugin per-chart only
   });
 }
-function updateDial(chart, value) {
+function updateDial(chart, value, color) {
   if (!chart) return;
   const v = Math.max(0, Math.min(100, Number(value) || 0));
   chart.data.datasets[0].data = [v, 100 - v];
+  chart.data.datasets[0].backgroundColor = [color, '#E5E7EB'];
   chart.update();
 }
 
@@ -596,14 +625,21 @@ function drawEfficiencyDials(data) {
   const rme = Number(data.rme_pct)               || 0;
   const ce  = Number(data.carbon_efficiency_pct) || 0;
 
+  // Color thresholds: good >= 80%, ok >= 60%, needs work < 60%
+  const getColor = (val) => {
+    if (val >= 80) return '#10B981'; // green
+    if (val >= 60) return '#F59E0B'; // yellow
+    return '#EF4444'; // red
+  };
+
   if (!dialCharts.ae) {
-    dialCharts.ae  = makeDial(document.getElementById('dialAE'),  ae,  '#60A5FA'); // blue-400
-    dialCharts.rme = makeDial(document.getElementById('dialRME'), rme, '#34D399'); // emerald-400
-    dialCharts.ce  = makeDial(document.getElementById('dialCE'),  ce,  '#F472B6'); // pink-400
+    dialCharts.ae  = makeDial(document.getElementById('dialAE'),  ae,  getColor(ae));
+    dialCharts.rme = makeDial(document.getElementById('dialRME'), rme, getColor(rme));
+    dialCharts.ce  = makeDial(document.getElementById('dialCE'),  ce,  getColor(ce));
   } else {
-    updateDial(dialCharts.ae,  ae);
-    updateDial(dialCharts.rme, rme);
-    updateDial(dialCharts.ce,  ce);
+    updateDial(dialCharts.ae,  ae,  getColor(ae));
+    updateDial(dialCharts.rme, rme, getColor(rme));
+    updateDial(dialCharts.ce,  ce,  getColor(ce));
   }
 }
 
@@ -665,7 +701,7 @@ function drawEfficiencyDials(data) {
       setTxt('#r_ae',     data.atom_economy_pct ?? '—');
       setTxt('#r_pmi',    data.pmi ?? '—');
       setTxt('#r_ef',     data.e_factor ?? '—');
-      setTxt('#r_water',  data.water_L_per_g ?? '—');
+      setTxt('#r_water',  data.water_mL_per_g ?? '—');
       setTxt('#r_energy', data.energy_kWh_per_g ?? '—');
       setTxt('#r_rme', data.rme_pct ?? '—');
 setTxt('#r_ce',  data.carbon_efficiency_pct ?? '—');
