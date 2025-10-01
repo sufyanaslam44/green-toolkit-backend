@@ -15,8 +15,108 @@
   .badge { font-size: 10px; border-radius: 9999px; padding: 2px 8px; }
   canvas.dial { display:block; width:100% !important; height:100% !important; max-width:100%; max-height:100%; }
   .dial-wrap { width: 10rem; height: 10rem; }       /* ~160px */
+  
+  /* Collapsible sections */
+  .section-toggle {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-toggle::before {
+    content: '▼';
+    font-size: 10px;
+    transition: transform 0.2s;
+  }
+  .section-toggle.collapsed::before {
+    transform: rotate(-90deg);
+  }
+  .section-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .section-content.hidden {
+    max-height: 0;
+  }
+  
   @media (min-width: 768px) {
     .dial-wrap { width: 12rem; height: 12rem; }     /* ~192px on md+ */
+  }
+  
+  /* Custom styled sliders for Time, Temperature and Pressure with dynamic fill */
+  #cond_time,
+  #cond_temp,
+  #cond_pressure {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: #E5E7EB;
+    outline: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Slider thumb styling for Webkit browsers (Chrome, Safari) */
+  #cond_time::-webkit-slider-thumb,
+  #cond_temp::-webkit-slider-thumb,
+  #cond_pressure::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #6B7280;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    margin-top: -6px; /* Centers 20px thumb on 8px track: (20-8)/2 = 6px */
+  }
+  
+  /* Slider thumb styling for Firefox */
+  #cond_time::-moz-range-thumb,
+  #cond_temp::-moz-range-thumb,
+  #cond_pressure::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #6B7280;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: none;
+  }
+  
+  /* Track fill for Webkit */
+  #cond_time::-webkit-slider-runnable-track,
+  #cond_temp::-webkit-slider-runnable-track,
+  #cond_pressure::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: transparent;
+  }
+  
+  /* Track styling for Firefox */
+  #cond_time::-moz-range-track,
+  #cond_temp::-moz-range-track,
+  #cond_pressure::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: transparent;
+    border: none;
+  }
+  
+  /* Progress fill for Firefox */
+  #cond_time::-moz-range-progress,
+  #cond_temp::-moz-range-progress,
+  #cond_pressure::-moz-range-progress {
+    height: 8px;
+    border-radius: 5px;
   }
 </style>
 
@@ -47,63 +147,44 @@
       <p class="text-xs text-gray-600 mt-1">Tweak variables; visuals update instantly.</p>
 
     <!-- Product -->
-<div class="mt-4">
-  <h2 class="text-sm font-medium mb-2">Product</h2>
-  <label class="text-xs text-gray-700">Name</label>
-  <input id="prod_name" class="w-full border rounded-lg px-3 py-2 mb-2" placeholder="aspirin" />
-
-  <!-- MW & Mass (top row, two columns) -->
-  <div class="flex gap-6">
-  <label class="grid">
-    <span class="text-xs text-gray-700">MW (g/mol)</span>
-    <input id="prod_mw" type="number" step="any" min="0"
-           class="border rounded-lg px-3 py-2 w-24"
-           placeholder="180.16">
-  </label>
-  <label class="grid">
-    <span class="text-xs text-gray-700">Mass (g)</span>
-    <input id="prod_mass" type="number" step="any" min="0"
-           class="border rounded-lg px-3 py-2 w-24"
-           placeholder="10">
-  </label>
-</div>
-
-
-  <!-- Carbon atoms (beneath) -->
-  <label class="grid mt-3">
-    <span class="text-xs text-gray-700">Product carbon atoms (optional)</span>
-    <input id="prod_carbon" type="number" min="0" class="border rounded-lg px-3 py-2" placeholder="e.g., 9">
-  </label>
+<div class="mt-4 border rounded-lg p-3">
+  <h2 class="text-sm font-medium mb-2 section-toggle" onclick="toggleSection(this)">Product</h2>
+  <div class="section-content">
+    <div id="products" class="grid gap-2"></div>
+    <button id="add-product" class="mt-2 w-full rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+  </div>
 </div>
       <!-- Reactants (compact card list) -->
-      <div class="mt-5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-medium">Reactants</h2>
-          <button id="add-reactant" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+      <div class="mt-5 border rounded-lg p-3">
+        <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Reactants</h2>
+        <div class="section-content hidden">
+          <div id="reactants" class="grid gap-2"></div>
+          <button id="add-reactant" class="mt-2 w-full rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
         </div>
-        <div id="reactants" class="mt-2 grid gap-2"></div>
-      
       </div>
 
       <!-- Solvents (compact card list) -->
-      <div class="mt-5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-medium">Solvents</h2>
-          <button id="add-solvent" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+      <div class="mt-5 border rounded-lg p-3">
+        <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Solvents</h2>
+        <div class="section-content hidden">
+          <div id="solvents" class="grid gap-2"></div>
+          <button id="add-solvent" class="mt-2 w-full rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
         </div>
-        <div id="solvents" class="mt-2 grid gap-2"></div>
       </div>
        <!-- Catalysts (compact card list) -->
-<div class="mt-5">
-  <div class="flex items-center justify-between">
-    <h2 class="text-sm font-medium">Catalysts</h2>
-    <button id="add-catalyst" class="rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
+<div class="mt-5 border rounded-lg p-3">
+  <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Catalysts</h2>
+  <div class="section-content hidden">
+    <div id="catalysts" class="grid gap-2"></div>
+    <button id="add-catalyst" class="mt-2 w-full rounded bg-emerald-600 text-white text-xs px-2 py-1 hover:bg-emerald-700">+ Add</button>
   </div>
-  <div id="catalysts" class="mt-2 grid gap-2"></div>
 </div>
 
-      <!-- Workup + Conditions (sliders like PhET) -->
-      <div class="mt-5 grid gap-4">
+      <!-- Workup (sliders like PhET) -->
+      <div class="mt-5 border rounded-lg p-3">
+        <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Water & Workup</h2>
+        <div class="section-content hidden">
+        <div class="grid gap-4">
         <div>
           <div class="flex items-center justify-between">
             <label class="text-sm font-medium">Aqueous washes (g)</label>
@@ -119,8 +200,14 @@
           </div>
           <input id="workup_drying" class="w-full knob" type="range" min="0" max="10" value="0" step="0.1">
         </div>
+        </div>
+        </div>
+      </div>
 
         <!-- Conditions: vertical order Mode → Time → Temp -->
+        <div class="mt-5 border rounded-lg p-3">
+        <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Conditions</h2>
+        <div class="section-content hidden">
         <div class="grid gap-3">
           <label class="grid">
             <span class="text-sm font-medium">Mode</span>
@@ -134,18 +221,26 @@
 
           <label class="grid">
             <span class="text-sm font-medium">Time (h)</span>
-            <input id="cond_time" type="range" min="0" max="8" step="0.1" value="1.5" class="knob">
+            <input id="cond_time" type="range" min="0" max="72" step="0.1" value="1.5" class="knob">
             <span id="lbl_time" class="text-xs text-gray-500">1.5 h</span>
           </label>
 
           <label class="grid">
             <span class="text-sm font-medium">Temp (°C)</span>
-            <input id="cond_temp" type="range" min="20" max="120" value="70" class="knob">
+            <input id="cond_temp" type="range" min="0" max="1000" value="70" class="knob">
             <span id="lbl_temp" class="text-xs text-gray-500">70 °C</span>
           </label>
+
+          <label class="grid">
+            <span class="text-sm font-medium">Pressure (atm)</span>
+            <input id="cond_pressure" type="range" min="0" max="1000" value="1" class="knob">
+            <span id="lbl_pressure" class="text-xs text-gray-500">1 atm</span>
+          </label>
+        </div>
+        </div>
         </div>
 
-        <label class="inline-flex items-center gap-2">
+        <label class="inline-flex items-center gap-2 mt-4">
           <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
           <span class="text-xs">Include recovered solvent in PMI numerator</span>
         </label>
@@ -278,13 +373,73 @@
     const toNum = (v) => { const n = Number(v); return Number.isFinite(n) ? n : NaN; };
     const setTxt = (id, t) => { const e = $(id); if (e) e.textContent = t; };
 
+    // Toggle collapsible sections
+    function toggleSection(header) {
+      header.classList.toggle('collapsed');
+      // Find the section-content - it might be the next sibling of the header or the parent's next sibling
+      let content = header.nextElementSibling;
+      if (!content || !content.classList.contains('section-content')) {
+        // If toggle is inside a flex container, look for parent's next sibling
+        content = header.parentElement.nextElementSibling;
+      }
+      if (content && content.classList.contains('section-content')) {
+        content.classList.toggle('hidden');
+      }
+    }
+
     // Footer year
     document.getElementById('year').textContent = new Date().getFullYear();
 
     // Reactant / solvent compact cards
+    const productsBox = $('#products');
     const reactantsBox = $('#reactants');
     const solventsBox = $('#solvents');
     const catalystsBox = $('#catalysts');
+    
+    function productCard(data = {}) {
+      const card = el('div', 'border rounded-lg p-3 grid gap-2');
+      card.innerHTML = `
+        <!-- Row 1: Name -->
+        <div class="flex flex-wrap items-end gap-6">
+          <label class="grid flex-1">
+            <span class="text-xs text-gray-700">Name</span>
+            <input class="p_name border rounded-lg px-3 py-2 text-xs"
+                   placeholder="aspirin" title="Name"
+                   value="${data.name||''}">
+          </label>
+        </div>
+
+        <!-- Row 2: MW | Mass -->
+        <div class="flex flex-wrap items-end gap-6">
+          <label class="grid">
+            <span class="text-xs text-gray-700">MW (g/mol)</span>
+            <input class="p_mw border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+                   placeholder="MW" title="MW (g/mol)"
+                   value="${data.mw||''}">
+          </label>
+          <label class="grid">
+            <span class="text-xs text-gray-700">Mass (g)</span>
+            <input class="p_mass border rounded-lg px-3 py-2 text-xs w-24" type="number" step="any" min="0"
+                   placeholder="Mass g" title="Mass (g)"
+                   value="${data.actual_mass_g||''}">
+          </label>
+        </div>
+
+        <!-- Row 3: C atoms | remove -->
+        <div class="flex flex-wrap items-end gap-6">
+          <label class="grid">
+            <span class="text-xs text-gray-700">C atoms (optional)</span>
+            <input class="p_c border rounded-lg px-3 py-2 text-xs w-24" type="number" min="0"
+                   placeholder="C atoms" title="C atoms"
+                   value="${data.carbon_atoms||''}">
+          </label>
+          <button type="button" class="rmv rounded border px-3 py-2 text-xs">x</button>
+        </div>
+      `;
+      card.querySelector('.rmv').onclick = () => card.remove();
+      return card;
+    }
+    
      function reactantCard(data = {}) {
   const card = el('div', 'border rounded-lg p-3 grid gap-2');
   card.innerHTML = `
@@ -409,15 +564,17 @@
 }
 
     // Add default cards
+    if (!productsBox.children.length) productsBox.appendChild(productCard());
     if (!reactantsBox.children.length) reactantsBox.appendChild(reactantCard());
     if (!solventsBox.children.length)  solventsBox.appendChild(solventCard());
     if (!catalystsBox.children.length) catalystsBox.appendChild(catalystCard());
     // Add buttons
+    $('#add-product').onclick = () => productsBox.appendChild(productCard());
     $('#add-reactant').onclick = () => reactantsBox.appendChild(reactantCard());
     $('#add-solvent').onclick  = () => solventsBox.appendChild(solventCard());
     $('#add-catalyst').onclick = () => catalystsBox.appendChild(catalystCard());
 
-    // Labels for sliders
+    // Labels for sliders with dynamic color fill
     function bindLabel(inputId, labelId, suffix) {
       const input = document.getElementById(inputId);
       const label = document.getElementById(labelId);
@@ -425,18 +582,62 @@
       const upd = () => label.textContent = `${input.value} ${suffix}`;
       input.addEventListener('input', upd); upd();
     }
+    
+    // Dynamic color fill for Time and Temperature sliders
+    function updateSliderFill(slider) {
+      const min = parseFloat(slider.min) || 0;
+      const max = parseFloat(slider.max) || 100;
+      const value = parseFloat(slider.value) || 0;
+      const percentage = ((value - min) / (max - min)) * 100;
+      
+      // Determine color based on percentage
+      let color;
+      if (percentage <= 33.33) {
+        color = '#10B981'; // green - good
+      } else if (percentage <= 66.66) {
+        color = '#F59E0B'; // yellow - ok
+      } else {
+        color = '#EF4444'; // red - needs work
+      }
+      
+      // Create gradient: colored fill up to current value, gray for remainder
+      const gradient = `linear-gradient(to right, ${color} 0%, ${color} ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`;
+      slider.style.background = gradient;
+    }
+    
+    // Initialize color-coded sliders
+    const timeSlider = document.getElementById('cond_time');
+    const tempSlider = document.getElementById('cond_temp');
+    const pressureSlider = document.getElementById('cond_pressure');
+    
+    if (timeSlider) {
+      updateSliderFill(timeSlider);
+      timeSlider.addEventListener('input', () => updateSliderFill(timeSlider));
+    }
+    
+    if (tempSlider) {
+      updateSliderFill(tempSlider);
+      tempSlider.addEventListener('input', () => updateSliderFill(tempSlider));
+    }
+    
+    if (pressureSlider) {
+      updateSliderFill(pressureSlider);
+      pressureSlider.addEventListener('input', () => updateSliderFill(pressureSlider));
+    }
+    
     bindLabel('workup_washes', 'lbl_washes', 'g');
     bindLabel('workup_drying', 'lbl_drying', 'g');
     bindLabel('cond_time', 'lbl_time', 'h');
     bindLabel('cond_temp', 'lbl_temp', '°C');
+    bindLabel('cond_pressure', 'lbl_pressure', 'atm');
 
     // Example
 $('#load-example').onclick = () => {
   // Product
-  $('#prod_name').value  = 'aspirin';
-  $('#prod_mw').value    = '180.16';
-  $('#prod_mass').value  = '10';
-  $('#prod_carbon').value = '9';        // <-- fill product carbon atoms
+  productsBox.innerHTML = '';
+  productsBox.appendChild(productCard({
+    name:'aspirin', mw:180.16, actual_mass_g:10, carbon_atoms:9
+  }));
 
   // Reactants (now include carbon + equivalents)
   reactantsBox.innerHTML = '';
@@ -472,12 +673,19 @@ $('#load-example').onclick = () => {
 
     // Build payload from UI
     function buildPayload() {
-      const product = {
-  name: $('#prod_name').value || null,
-  mw: toNum($('#prod_mw').value),
-  actual_mass_g: toNum($('#prod_mass').value),
-  carbon_atoms: toNum($('#prod_carbon')?.value) || null
-};
+      // Get first product card (or use default empty values)
+      const productCard = productsBox.children[0];
+      const product = productCard ? {
+        name: productCard.querySelector('.p_name')?.value || null,
+        mw: toNum(productCard.querySelector('.p_mw')?.value),
+        actual_mass_g: toNum(productCard.querySelector('.p_mass')?.value),
+        carbon_atoms: toNum(productCard.querySelector('.p_c')?.value) || null
+      } : {
+        name: null,
+        mw: NaN,
+        actual_mass_g: NaN,
+        carbon_atoms: null
+      };
 
 const reactants = [...reactantsBox.children].map(r => ({
   name: r.querySelector('.r_name').value || null,
