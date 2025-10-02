@@ -309,6 +309,14 @@
       <div class="text-gray-500 text-xs">Stoichiometric Factor</div>
       <div id="r_sf" class="text-2xl font-semibold">—</div>
     </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Solvent Intensity (SI)</div>
+      <div id="r_si" class="text-2xl font-semibold">—</div>
+    </div>
+    <div class="border rounded-lg p-3">
+      <div class="text-gray-500 text-xs">Carbon Footprint (g CO₂/g)</div>
+      <div id="r_cf" class="text-2xl font-semibold">—</div>
+    </div>
   </div>
 
   <!-- Visuals BENEATH -->
@@ -762,9 +770,20 @@ const reactants = [...reactantsBox.children].map(r => ({
     // Metrics chart with color coding based on thresholds
     let metricsChart;
     function drawMetricsChart(data) {
-      const labels = ['PMI','E-factor','Water (mL/g)','Energy (Wh/g)'];
+      const labels = ['PMI','E-factor','Water (mL/g)','Energy (Wh/g)','SI','CO₂ (g/g)'];
       const energy_Wh_per_g = (data.energy_kWh_per_g ?? 0) * 1000;
-      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_mL_per_g ?? null, energy_Wh_per_g || null];
+      
+      // Calculate SI
+      const b = data.breakdown || {};
+      const total_solvent_mass = b.solvent_mass_total_g || 0;
+      const product_mass = b.product_mass_g || 0;
+      const si = product_mass > 0 ? (total_solvent_mass / product_mass) : null;
+      
+      // Calculate Carbon Footprint (g CO2 per g product)
+      // Rough estimation: energy * 0.5 (kg CO2/kWh) = energy_kWh * 500 g CO2/kWh
+      const carbon_footprint = data.energy_kWh_per_g ? (data.energy_kWh_per_g * 500) : null;
+      
+      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_mL_per_g ?? null, energy_Wh_per_g || null, si, carbon_footprint];
       
       // Color coding based on green chemistry thresholds (lower is better)
       // Green: good, Yellow: ok, Red: needs work
@@ -772,7 +791,9 @@ const reactants = [...reactantsBox.children].map(r => ({
         { good: 10, ok: 30 },    // PMI
         { good: 5, ok: 10 },     // E-factor
         { good: 20, ok: 50 },    // Water (mL/g)
-        { good: 5000, ok: 10000 }      // Energy (Wh/g)
+        { good: 5000, ok: 10000 },     // Energy (Wh/g)
+        { good: 5, ok: 15 },     // SI (Solvent Intensity)
+        { good: 1000, ok: 2500 }  // Carbon Footprint (g CO2/g product)
       ];
       
       const colors = values.map((val, idx) => {
@@ -957,6 +978,18 @@ function drawEfficiencyDials(data) {
       setTxt('#r_rme', data.rme_pct ?? '—');
 setTxt('#r_ce',  data.carbon_efficiency_pct ?? '—');
 setTxt('#r_sf',  data.sf_overall ?? '—');
+      
+      // Calculate Solvent Intensity (SI) = total solvent mass / product mass
+      const b = data.breakdown || {};
+      const total_solvent_mass = b.solvent_mass_total_g || 0;
+      const product_mass = b.product_mass_g || 0;
+      const si = product_mass > 0 ? (total_solvent_mass / product_mass).toFixed(2) : '—';
+      setTxt('#r_si', si);
+      
+      // Calculate Carbon Footprint (g CO2 per g product)
+      // Rough estimation: energy * 0.5 (kg CO2/kWh) = energy_kWh * 500 g CO2/kWh
+      const cf = data.energy_kWh_per_g ? (data.energy_kWh_per_g * 500).toFixed(2) : '—';
+      setTxt('#r_cf', cf);
 
 
       // visuals
