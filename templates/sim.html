@@ -240,6 +240,25 @@
         </div>
         </div>
 
+        <!-- Separation/Purification -->
+        <div class="mt-5 border rounded-lg p-3">
+        <h2 class="text-sm font-medium mb-2 section-toggle collapsed" onclick="toggleSection(this)">Separation/Purification</h2>
+        <div class="section-content hidden">
+        <div class="grid gap-3">
+          <label class="grid">
+            <span class="text-sm font-medium">Method</span>
+            <select id="sep_method" class="border rounded-lg px-2 py-2">
+              <option value="distillation">🧪 Distillation</option>
+              <option value="evaporation">💨 Evaporation</option>
+              <option value="crystallization">❄️ Crystallization</option>
+              <option value="chromatography">🔬 Chromatography</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+        </div>
+        </div>
+        </div>
+
         <label class="inline-flex items-center gap-2 mt-4">
           <input id="opt_pmi_recovered" type="checkbox" class="h-4 w-4">
           <span class="text-xs">Include recovered solvent in PMI numerator</span>
@@ -672,6 +691,7 @@ $('#load-example').onclick = () => {
   $('#cond_time').value = 1.5;       $('#lbl_time').textContent = '1.5 h';
   $('#cond_temp').value = 70;        $('#lbl_temp').textContent = '70 °C';
   $('#cond_pressure').value = 1;     $('#lbl_pressure').textContent = '1 atm';
+  $('#sep_method').value = 'crystallization';
   $('#opt_pmi_recovered').checked = false;
   
   // Update slider fill colors
