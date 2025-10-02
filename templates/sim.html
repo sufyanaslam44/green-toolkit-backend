@@ -294,7 +294,7 @@
       <div id="r_water" class="text-2xl font-semibold">—</div>
     </div>
     <div class="border rounded-lg p-3">
-      <div class="text-gray-500 text-xs">Energy (kWh/g)</div>
+      <div class="text-gray-500 text-xs">Energy (Wh/g)</div>
       <div id="r_energy" class="text-2xl font-semibold">—</div>
     </div>
     <div class="border rounded-lg p-3">
@@ -762,8 +762,9 @@ const reactants = [...reactantsBox.children].map(r => ({
     // Metrics chart with color coding based on thresholds
     let metricsChart;
     function drawMetricsChart(data) {
-      const labels = ['PMI','E-factor','Water (mL/g)','Energy (kWh/g)'];
-      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_mL_per_g ?? null, data.energy_kWh_per_g ?? null];
+      const labels = ['PMI','E-factor','Water (mL/g)','Energy (Wh/g)'];
+      const energy_Wh_per_g = (data.energy_kWh_per_g ?? 0) * 1000;
+      const values = [data.pmi ?? null, data.e_factor ?? null, data.water_mL_per_g ?? null, energy_Wh_per_g || null];
       
       // Color coding based on green chemistry thresholds (lower is better)
       // Green: good, Yellow: ok, Red: needs work
@@ -771,7 +772,7 @@ const reactants = [...reactantsBox.children].map(r => ({
         { good: 10, ok: 30 },    // PMI
         { good: 5, ok: 10 },     // E-factor
         { good: 20, ok: 50 },    // Water (mL/g)
-        { good: 5, ok: 10 }      // Energy (kWh/g)
+        { good: 5000, ok: 10000 }      // Energy (Wh/g)
       ];
       
       const colors = values.map((val, idx) => {
@@ -951,7 +952,8 @@ function drawEfficiencyDials(data) {
       setTxt('#r_pmi',    data.pmi ?? '—');
       setTxt('#r_ef',     data.e_factor ?? '—');
       setTxt('#r_water',  data.water_mL_per_g ?? '—');
-      setTxt('#r_energy', data.energy_kWh_per_g ?? '—');
+      const energy_Wh = data.energy_kWh_per_g ? (data.energy_kWh_per_g * 1000).toFixed(2) : '—';
+      setTxt('#r_energy', energy_Wh);
       setTxt('#r_rme', data.rme_pct ?? '—');
 setTxt('#r_ce',  data.carbon_efficiency_pct ?? '—');
 setTxt('#r_sf',  data.sf_overall ?? '—');
