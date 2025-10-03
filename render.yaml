@@ -1,0 +1,17 @@
+services:
+  # Web Service
+  - type: web
+    name: green-toolkit-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: python run_server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /opt/render/.cache/ms-playwright
+    
+    # Health check
+    healthCheckPath: /api/health

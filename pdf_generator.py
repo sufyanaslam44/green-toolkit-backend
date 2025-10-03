@@ -41,7 +41,13 @@ async def generate_simulation_pdf(
             print("[PDF] Launching browser...")
             browser = await p.chromium.launch(
                 headless=True,
-                args=['--disable-gpu', '--no-sandbox']
+                args=[
+                    '--disable-gpu',
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',  # Important for Docker/Render
+                    '--disable-setuid-sandbox',
+                    '--single-process'  # Helps with memory constraints
+                ]
             )
             
             page = await browser.new_page()
