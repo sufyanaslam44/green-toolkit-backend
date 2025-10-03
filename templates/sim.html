@@ -398,8 +398,9 @@
       </div>
     </div>
 
-    <!-- Generate PDF Button -->
-    <div class="md:col-span-2 flex justify-center">
+    <!-- Action Buttons -->
+    <div class="md:col-span-2 flex justify-center gap-4">
+      <button id="ask-ai" class="hidden rounded-lg bg-blue-600 text-white px-6 py-3 text-sm font-medium hover:bg-blue-700 shadow-md">Ask AI</button>
       <button id="generate-pdf" class="hidden rounded-lg bg-emerald-600 text-white px-6 py-3 text-sm font-medium hover:bg-emerald-700 shadow-md">Generate PDF Report</button>
     </div>
   </div>
@@ -1058,8 +1059,10 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
         if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
         renderAll(data);
         
-        // Show Generate PDF button after successful simulation
+        // Show Ask AI and Generate PDF buttons after successful simulation
+        const aiBtn = document.getElementById('ask-ai');
         const pdfBtn = document.getElementById('generate-pdf');
+        if (aiBtn) aiBtn.classList.remove('hidden');
         if (pdfBtn) pdfBtn.classList.remove('hidden');
       } catch {
         err.textContent = 'Network error. Is the server running?'; err.classList.remove('hidden');
