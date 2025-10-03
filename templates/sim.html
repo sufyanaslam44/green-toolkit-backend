@@ -1072,90 +1072,9 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
     document.getElementById('simulate').onclick = runSim;
     document.getElementById('reset').onclick = () => location.reload();
     
-    // Generate PDF Report handler
+    // Generate PDF Report handler - Will be implemented with new PDF library
     document.getElementById('generate-pdf').onclick = async () => {
-      try {
-        // Show loading state
-        const pdfBtn = document.getElementById('generate-pdf');
-        const originalText = pdfBtn.textContent;
-        pdfBtn.textContent = 'Generating PDF...';
-        pdfBtn.disabled = true;
-        
-        // Gather all simulation data
-        const pdfData = {
-          reactionName: document.getElementById('reaction-name')?.value || 'Green Chemistry Simulation Report',
-          metrics: lastResult ? {
-            eFactor: lastResult.e_factor?.toFixed(2),
-            atomEconomy: lastResult.atom_economy?.toFixed(1),
-            massEfficiency: lastResult.mass_efficiency?.toFixed(1),
-            energy: lastResult.energy_metric?.toFixed(2),
-            solventIntensity: lastResult.solvent_intensity?.toFixed(2),
-            carbonFootprint: lastResult.carbon_footprint?.toFixed(2)
-          } : {},
-          reactants: [],
-          solvents: [],
-          conditions: {
-            temperature: document.querySelector('input[placeholder="Temperature (°C)"]')?.value || 'N/A',
-            time: document.querySelector('input[placeholder="Time (hours)"]')?.value || 'N/A',
-            pressure: document.querySelector('input[placeholder="Pressure (atm)"]')?.value || 'N/A'
-          }
-        };
-        
-        // Collect reactants data
-        document.querySelectorAll('.reactant-card').forEach(card => {
-          const reactant = {
-            name: card.querySelector('input[placeholder="Reactant Name"]')?.value || 'N/A',
-            mass: card.querySelector('input[placeholder="Mass"]')?.value || 'N/A',
-            mw: card.querySelector('input[placeholder="Mol Wt."]')?.value || 'N/A',
-            moles: card.querySelector('input[placeholder="Moles"]')?.value || 'N/A'
-          };
-          pdfData.reactants.push(reactant);
-        });
-        
-        // Collect solvents data
-        document.querySelectorAll('.solvent-card').forEach(card => {
-          const solvent = {
-            name: card.querySelector('input[placeholder="Solvent Name"]')?.value || 'N/A',
-            mass: card.querySelector('input[placeholder="Mass"]')?.value || 'N/A',
-            bp: card.querySelector('input[placeholder="B.P (°C)"]')?.value || 'N/A'
-          };
-          pdfData.solvents.push(solvent);
-        });
-        
-        // Call the PDF generation endpoint with POST
-        const response = await fetch('/download-pdf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(pdfData)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to generate PDF');
-        }
-        
-        // Get the PDF blob and create download link
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'green-chemistry-report.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        // Restore button state
-        pdfBtn.textContent = originalText;
-        pdfBtn.disabled = false;
-      } catch (error) {
-        console.error('PDF generation error:', error);
-        alert('Failed to generate PDF. Please try again.');
-        const pdfBtn = document.getElementById('generate-pdf');
-        pdfBtn.textContent = 'Generate PDF Report';
-        pdfBtn.disabled = false;
-      }
+      alert('PDF generation will be implemented with new library');
     };
   </script>
 </body>
