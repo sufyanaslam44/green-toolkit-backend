@@ -24,8 +24,6 @@ async def generate_simulation_pdf(
         str: Path to the generated PDF file
     """
     try:
-        print("[PDF DEBUG] Starting PDF generation...")
-        
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             reaction_name = simulation_data.get('reaction_name', 'simulation') if isinstance(simulation_data, dict) else 'simulation'
@@ -33,34 +31,22 @@ async def generate_simulation_pdf(
             safe_name = safe_name.replace(' ', '_') or 'simulation'
             output_path = f"green_chem_report_{safe_name}_{timestamp}.pdf"
         
-        print(f"[PDF DEBUG] Output path: {output_path}")
-        print("[PDF DEBUG] Generating HTML content...")
+        print(f"[PDF] Generating: {output_path}")
         
         # Generate HTML content for the PDF
         html_content = generate_report_html(simulation_data)
         
-        print(f"[PDF DEBUG] HTML generated, length: {len(html_content)} chars")
-        print("[PDF DEBUG] Initializing Playwright...")
-        
         # Use Playwright async API to generate PDF
         async with async_playwright() as p:
-            print("[PDF DEBUG] Playwright initialized")
-            print("[PDF DEBUG] Launching Chromium...")
-            
+            print("[PDF] Launching browser...")
             browser = await p.chromium.launch(
                 headless=True,
                 args=['--disable-gpu', '--no-sandbox']
             )
-            print("[PDF DEBUG] Browser launched")
             
             page = await browser.new_page()
-            print("[PDF DEBUG] Page created")
-            
-            print("[PDF DEBUG] Setting HTML content...")
             await page.set_content(html_content, wait_until='networkidle')
-            print("[PDF DEBUG] Content set")
             
-            print("[PDF DEBUG] Generating PDF file...")
             # Generate PDF with proper formatting
             await page.pdf(
                 path=output_path,
@@ -73,20 +59,15 @@ async def generate_simulation_pdf(
                     'left': '15mm'
                 }
             )
-            print(f"[PDF DEBUG] PDF generated: {output_path}")
             
             await browser.close()
-            print("[PDF DEBUG] Browser closed")
         
-        print(f"[PDF DEBUG] Success! PDF saved to: {output_path}")
+        print(f"[PDF] ✅ Success: {output_path}")
         return output_path
     except Exception as e:
-        # Better error message for debugging
         import traceback
         error_msg = f"PDF generation error: {str(e)}\n{traceback.format_exc()}"
-        print(error_msg)  # Log to console
-        print(f"[PDF DEBUG] Error type: {type(e).__name__}")
-        print(f"[PDF DEBUG] Error message: {str(e)}")
+        print(f"[PDF] ❌ Error: {error_msg}")
         raise Exception(f"Failed to generate PDF: {str(e)}")
 
 

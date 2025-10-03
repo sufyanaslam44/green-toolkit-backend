@@ -1,14 +1,8 @@
 """
 Test the live /api/generate-pdf endpoint
 """
-import asyncio
-import sys
 import requests
 import json
-
-# Set event loop policy for Windows
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # Sample payload matching the web interface
 test_payload = {
@@ -16,7 +10,7 @@ test_payload = {
     "product": {
         "name": "Test Product",
         "mw": 180.0,
-        "actual_mass_g": 10.0  # Fixed: use actual_mass_g not mass_g
+        "actual_mass_g": 10.0  # Correct field name
     },
     "reactants": [
         {
@@ -53,7 +47,6 @@ try:
     )
     
     print(f"Status Code: {response.status_code}")
-    print(f"Headers: {dict(response.headers)}")
     
     if response.status_code == 200:
         print("✅ SUCCESS! PDF generated")

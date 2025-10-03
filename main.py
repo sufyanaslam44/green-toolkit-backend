@@ -19,6 +19,23 @@ if sys.platform == 'win32':
     # Set the event loop policy to use ProactorEventLoop on Windows
     # This is required for subprocess support which Playwright needs
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    
+    # Check if the policy was set correctly
+    policy = asyncio.get_event_loop_policy()
+    if not isinstance(policy, asyncio.WindowsProactorEventLoopPolicy):
+        print("=" * 80)
+        print("⚠️  WARNING: Event loop policy not set correctly!")
+        print("⚠️  PDF generation will FAIL with NotImplementedError")
+        print("=" * 80)
+        print("SOLUTION: Start server using one of these methods:")
+        print("  1. python run_server.py")
+        print("  2. start_server.bat")
+        print("  3. .\\start_server.ps1")
+        print("")
+        print("❌ DO NOT USE: uvicorn main:app --reload")
+        print("=" * 80)
+    else:
+        print(f"✅ Windows ProactorEventLoop policy set correctly")
 
 # ------------------------------------------------------------------------------
 # App & paths
@@ -452,15 +469,10 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         # Convert payload to dict for PDF generator
         data_dict = payload.model_dump()
         
-        # Log received data for debugging (optional - remove in production)
-        print(f"[PDF Generation] Received data for: {data_dict.get('reaction_name', 'unnamed')}")
-        print(f"[PDF Generation] Product: {data_dict.get('product', {}).get('name', 'N/A')}")
-        print(f"[PDF Generation] Reactants count: {len(data_dict.get('reactants', []))}")
+        print(f"[API] PDF request for: {data_dict.get('reaction_name', 'unnamed')}")
         
-        # Generate PDF - now properly awaited
+        # Generate PDF
         pdf_path = await generate_simulation_pdf(data_dict)
-        
-        print(f"[PDF Generation] Success: {pdf_path}")
         
         # Return the PDF file
         return FileResponse(
@@ -473,8 +485,7 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         )
     except Exception as e:
         import traceback
-        error_details = traceback.format_exc()
-        print(f"[PDF Generation] Error: {error_details}")
+        print(f"PDF generation error: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 # ------------------------------------------------------------------------------
