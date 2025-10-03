@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -7,6 +7,9 @@ from typing import List, Optional, Literal, Dict, Any
 from pathlib import Path
 from math import isfinite
 import os
+import tempfile
+import atexit
+import shutil
 
 # ------------------------------------------------------------------------------
 # App & paths
@@ -398,6 +401,208 @@ def reaction_impact(payload: ReactionImpactIn):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
+
+# ------------------------------------------------------------------------------
+# PDF Generation API
+# ------------------------------------------------------------------------------
+
+# Create a temporary directory for PDFs that gets cleaned up on exit
+TEMP_PDF_DIR = Path(tempfile.mkdtemp(prefix="green_toolkit_pdfs_"))
+
+@atexit.register
+def cleanup_temp_pdfs():
+    """Clean up temporary PDF directory on application exit."""
+    try:
+        if TEMP_PDF_DIR.exists():
+            shutil.rmtree(TEMP_PDF_DIR)
+    except Exception:
+        pass
+
+@app.post("/download-pdf")
+async def download_pdf(data: dict):
+    """
+    Generate a simple PDF report from the simulation data.
+    Receives JSON data from the frontend and creates a basic PDF report.
+    """
+    pdf_path = None
+    try:
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        
+        # Create a temporary file for the PDF
+        pdf_path = TEMP_PDF_DIR / f"report_{os.urandom(8).hex()}.pdf"
+        
+        print(f"[PDF] Starting PDF generation at {pdf_path}")
+        
+        # Create the PDF document
+        doc = SimpleDocTemplate(str(pdf_path), pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#059669'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#059669'),
+            spaceAfter=12,
+            spaceBefore=12
+        )
+        
+        # Title
+        reaction_name = data.get('reactionName', 'Green Chemistry Simulation Report')
+        elements.append(Paragraph(reaction_name, title_style))
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Metrics Section
+        elements.append(Paragraph("Key Metrics", heading_style))
+        metrics = data.get('metrics', {})
+        metrics_data = [
+            ['Metric', 'Value'],
+            ['E-Factor', f"{metrics.get('eFactor', 'N/A')}"],
+            ['Atom Economy', f"{metrics.get('atomEconomy', 'N/A')}%"],
+            ['Mass Efficiency', f"{metrics.get('massEfficiency', 'N/A')}%"],
+            ['Energy', f"{metrics.get('energy', 'N/A')} Wh/g"],
+            ['Solvent Intensity', f"{metrics.get('solventIntensity', 'N/A')}"],
+            ['Carbon Footprint', f"{metrics.get('carbonFootprint', 'N/A')} g CO₂/g"]
+        ]
+        
+        metrics_table = Table(metrics_data, colWidths=[3*inch, 3*inch])
+        metrics_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(metrics_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Reactants Section
+        elements.append(Paragraph("Reactants", heading_style))
+        reactants = data.get('reactants', [])
+        if reactants:
+            reactants_data = [['Name', 'Mass (g)', 'Molecular Weight', 'Moles']]
+            for r in reactants:
+                reactants_data.append([
+                    r.get('name', 'N/A'),
+                    str(r.get('mass', 'N/A')),
+                    str(r.get('mw', 'N/A')),
+                    str(r.get('moles', 'N/A'))
+                ])
+            reactants_table = Table(reactants_data, colWidths=[2*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+            reactants_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(reactants_table)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Solvents Section
+        elements.append(Paragraph("Solvents", heading_style))
+        solvents = data.get('solvents', [])
+        if solvents:
+            solvents_data = [['Name', 'Mass (g)', 'Boiling Point (°C)']]
+            for s in solvents:
+                solvents_data.append([
+                    s.get('name', 'N/A'),
+                    str(s.get('mass', 'N/A')),
+                    str(s.get('bp', 'N/A'))
+                ])
+            solvents_table = Table(solvents_data, colWidths=[2.5*inch, 2*inch, 2*inch])
+            solvents_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            elements.append(solvents_table)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Conditions Section
+        elements.append(Paragraph("Reaction Conditions", heading_style))
+        conditions = data.get('conditions', {})
+        conditions_data = [
+            ['Parameter', 'Value'],
+            ['Temperature', f"{conditions.get('temperature', 'N/A')} °C"],
+            ['Time', f"{conditions.get('time', 'N/A')} hours"],
+            ['Pressure', f"{conditions.get('pressure', 'N/A')} atm"]
+        ]
+        conditions_table = Table(conditions_data, colWidths=[3*inch, 3*inch])
+        conditions_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(conditions_table)
+        
+        # Build PDF
+        doc.build(elements)
+        print("[PDF] PDF generated successfully")
+        
+        # Return the PDF as a downloadable file
+        response = FileResponse(
+            path=str(pdf_path),
+            media_type='application/pdf',
+            filename='green-chemistry-report.pdf'
+        )
+        
+        # Schedule the file for deletion after response is sent
+        @response.background
+        async def cleanup():
+            try:
+                if pdf_path and pdf_path.exists():
+                    pdf_path.unlink()
+                    print(f"[PDF] Cleaned up temporary file: {pdf_path}")
+            except Exception as e:
+                print(f"[PDF] Cleanup error: {e}")
+        
+        print("[PDF] Returning PDF response")
+        return response
+        
+    except Exception as e:
+        # Clean up the PDF file if there was an error
+        print(f"[PDF] ERROR: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        if pdf_path and pdf_path.exists():
+            try:
+                pdf_path.unlink()
+            except Exception:
+                pass
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 # ------------------------------------------------------------------------------
 # Pages (Jinja templates)

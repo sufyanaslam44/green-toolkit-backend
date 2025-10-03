@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "eslint . --ext .js,.ts,.svelte",
-  "lint:fix": "eslint . --ext .js,.svelte --fix"
+    "lint:fix": "eslint . --ext .js,.svelte --fix"
   },
   "devDependencies": {
     "@eslint/css": "^0.11.1",
