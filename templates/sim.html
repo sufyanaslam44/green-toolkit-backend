@@ -146,6 +146,14 @@
       </div>
       <p class="text-xs text-gray-600 mt-1">Tweak variables; visuals update instantly.</p>
 
+      <!-- Reaction Name -->
+      <div class="mt-3">
+        <label class="grid">
+          <span class="text-xs text-gray-700 mb-1">Reaction Name</span>
+          <input id="reaction_name" type="text" class="border rounded-lg px-3 py-2 text-sm" placeholder="Enter reaction name..." title="Reaction Name">
+        </label>
+      </div>
+
     <!-- Product -->
 <div class="mt-4 border rounded-lg p-3">
   <h2 class="text-sm font-medium mb-2 section-toggle" onclick="toggleSection(this)">Product</h2>
@@ -380,6 +388,19 @@
           <div><span class="inline-block w-3 h-3 mr-2" style="background:#A7F3D0"></span>Recovered solvent</div>
         </div>
       </div>
+    </div>
+
+    <!-- AI Suggestions -->
+    <div class="border rounded-xl p-4 md:col-span-2">
+      <h2 class="text-sm font-medium">AI Suggestions</h2>
+      <div id="ai-suggestions" class="mt-3 text-sm text-gray-600">
+        <p class="italic">Run a simulation to get AI-powered suggestions for improving your green chemistry metrics.</p>
+      </div>
+    </div>
+
+    <!-- Generate PDF Button -->
+    <div class="md:col-span-2 flex justify-center">
+      <button id="generate-pdf" class="hidden rounded-lg bg-emerald-600 text-white px-6 py-3 text-sm font-medium hover:bg-emerald-700 shadow-md">Generate PDF Report</button>
     </div>
   </div>
 </section>
@@ -666,6 +687,9 @@
 
     // Example
 $('#load-example').onclick = () => {
+  // Reaction Name
+  $('#reaction_name').value = 'Synthesis of Aspirin';
+  
   // Product
   productsBox.innerHTML = '';
   productsBox.appendChild(productCard({
@@ -706,6 +730,18 @@ $('#load-example').onclick = () => {
   updateSliderFill(timeSlider);
   updateSliderFill(tempSlider);
   updateSliderFill(pressureSlider);
+  
+  // Expand all collapsed sections
+  document.querySelectorAll('.section-toggle.collapsed').forEach(toggle => {
+    toggle.classList.remove('collapsed');
+    let content = toggle.nextElementSibling;
+    if (!content || !content.classList.contains('section-content')) {
+      content = toggle.parentElement.nextElementSibling;
+    }
+    if (content && content.classList.contains('section-content')) {
+      content.classList.remove('hidden');
+    }
+  });
 
   // (optional) auto-run so CE & SF show immediately:
   // runSim();
@@ -1021,6 +1057,10 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
         const data = await res.json();
         if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
         renderAll(data);
+        
+        // Show Generate PDF button after successful simulation
+        const pdfBtn = document.getElementById('generate-pdf');
+        if (pdfBtn) pdfBtn.classList.remove('hidden');
       } catch {
         err.textContent = 'Network error. Is the server running?'; err.classList.remove('hidden');
       }
