@@ -1005,6 +1005,9 @@ function drawEfficiencyDials(data) {
 
     // Render all UI outputs
     function renderAll(data) {
+      // Store the last simulation data globally for PDF generation
+      window.lastSimulationData = data;
+      
       // number cards
       setTxt('#r_ae',     data.atom_economy_pct ?? '—');
       setTxt('#r_pmi',    data.pmi ?? '—');
@@ -1072,9 +1075,84 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
     document.getElementById('simulate').onclick = runSim;
     document.getElementById('reset').onclick = () => location.reload();
     
-    // Generate PDF Report handler - Will be implemented with new PDF library
+    // Generate PDF Report handler
     document.getElementById('generate-pdf').onclick = async () => {
-      alert('PDF generation will be implemented with new library');
+      try {
+        // Check if we have simulation data
+        if (!window.lastSimulationData) {
+          alert('Please run a simulation first before generating a PDF report.');
+          return;
+        }
+        
+        // Get current simulation data
+        const payload = buildPayload();
+        
+        // Get reaction name
+        const reactionName = document.getElementById('reaction_name')?.value || 'Green Chemistry Simulation';
+        
+        // Use the stored simulation data (which has all computed metrics)
+        // and merge with current input data
+        const fullPayload = {
+          // Include all computed metrics from the last simulation FIRST
+          ...window.lastSimulationData,
+          // Then override with current input data (this preserves product, reactants, etc.)
+          reaction_name: reactionName,
+          product: payload.product || {},
+          reactants: payload.reactants || [],
+          solvents: payload.solvents || [],
+          catalysts: payload.catalysts || [],
+          workup: payload.workup || {},
+          conditions: payload.conditions || {},
+          options: payload.options || {},
+          // AI suggestions from the page
+          ai_suggestions: Array.from(document.querySelectorAll('#ai-suggestions li'))
+            .map(li => li.textContent.trim())
+            .filter(t => t && !t.includes('Run simulation') && !t.includes('No suggestions'))
+        };
+        
+        // Show loading state
+        const btn = document.getElementById('generate-pdf');
+        const originalText = btn.textContent;
+        btn.textContent = 'Generating PDF...';
+        btn.disabled = true;
+        
+        // Call API to generate PDF
+        const response = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fullPayload)
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'PDF generation failed');
+        }
+        
+        // Download the PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `green_chem_report_${reactionName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Restore button
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        alert('PDF report generated successfully!');
+      } catch (err) {
+        console.error('PDF generation error:', err);
+        alert(`Error generating PDF: ${err.message}`);
+        
+        // Restore button
+        const btn = document.getElementById('generate-pdf');
+        btn.textContent = 'Generate PDF Report';
+        btn.disabled = false;
+      }
     };
   </script>
 </body>

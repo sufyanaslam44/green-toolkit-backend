@@ -8,6 +8,17 @@ from typing import List, Optional, Literal, Dict, Any
 from pathlib import Path
 from math import isfinite
 import os
+import sys
+import asyncio
+from pdf_generator import generate_simulation_pdf
+
+# ------------------------------------------------------------------------------
+# Fix for Windows + Python 3.13 + Playwright subprocess issue
+# ------------------------------------------------------------------------------
+if sys.platform == 'win32':
+    # Set the event loop policy to use ProactorEventLoop on Windows
+    # This is required for subprocess support which Playwright needs
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # ------------------------------------------------------------------------------
 # App & paths
@@ -408,6 +419,63 @@ def reaction_impact(payload: ReactionImpactIn):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
+
+# ------------------------------------------------------------------------------
+# PDF Generation API
+# ------------------------------------------------------------------------------
+class PDFGenerationIn(BaseModel):
+    """Request body for PDF generation - includes all simulation data"""
+    reaction_name: Optional[str] = "Green Chemistry Simulation"
+    product: Product
+    reactants: List[Reactant]
+    solvents: List[Solvent] = Field(default_factory=list)
+    catalysts: List[Catalyst] = Field(default_factory=list)
+    workup: Workup = Workup()
+    conditions: Conditions = Conditions()
+    # Include computed metrics
+    atom_economy_pct: Optional[float] = None
+    pmi: Optional[float] = None
+    e_factor: Optional[float] = None
+    water_mL_per_g: Optional[float] = None
+    energy_kWh_per_g: Optional[float] = None
+    rme_pct: Optional[float] = None
+    carbon_efficiency_pct: Optional[float] = None
+    sf_overall: Optional[float] = None
+    sf_details: Optional[List[SFDetail]] = None
+    breakdown: Optional[Dict[str, Any]] = None
+    ai_suggestions: List[str] = Field(default_factory=list)
+
+@app.post("/api/generate-pdf")
+async def generate_pdf_report(payload: PDFGenerationIn):
+    """Generate a PDF report from simulation data"""
+    try:
+        # Convert payload to dict for PDF generator
+        data_dict = payload.model_dump()
+        
+        # Log received data for debugging (optional - remove in production)
+        print(f"[PDF Generation] Received data for: {data_dict.get('reaction_name', 'unnamed')}")
+        print(f"[PDF Generation] Product: {data_dict.get('product', {}).get('name', 'N/A')}")
+        print(f"[PDF Generation] Reactants count: {len(data_dict.get('reactants', []))}")
+        
+        # Generate PDF - now properly awaited
+        pdf_path = await generate_simulation_pdf(data_dict)
+        
+        print(f"[PDF Generation] Success: {pdf_path}")
+        
+        # Return the PDF file
+        return FileResponse(
+            path=pdf_path,
+            media_type='application/pdf',
+            filename=Path(pdf_path).name,
+            headers={
+                "Content-Disposition": f'attachment; filename="{Path(pdf_path).name}"'
+            }
+        )
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"[PDF Generation] Error: {error_details}")
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
 # ------------------------------------------------------------------------------
 # Pages (Jinja templates)
