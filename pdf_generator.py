@@ -88,7 +88,7 @@ def generate_report_html(data: Dict[str, Any]) -> str:
     reaction_name = data.get('reaction_name', 'Green Chemistry Simulation')
     timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
     
-    # Extract metrics with safe defaults
+        # Extract metrics with safe defaults
     ae = data.get('atom_economy_pct', 'N/A')
     pmi = data.get('pmi', 'N/A')
     e_factor = data.get('e_factor', 'N/A')
@@ -96,7 +96,7 @@ def generate_report_html(data: Dict[str, Any]) -> str:
     ce = data.get('carbon_efficiency_pct', 'N/A')
     sf = data.get('sf_overall', 'N/A')
     water = data.get('water_mL_per_g', 'N/A')
-    energy = data.get('energy_kWh_per_g', 'N/A')
+    energy = data.get('energy_Wh_per_g', 'N/A')
     
     # Calculate additional metrics
     breakdown = data.get('breakdown') or {}
@@ -104,71 +104,11 @@ def generate_report_html(data: Dict[str, Any]) -> str:
     total_solvent = breakdown.get('solvent_mass_total_g', 0) if isinstance(breakdown, dict) else 0
     si = round(total_solvent / product_mass, 2) if product_mass > 0 else 'N/A'
     
-    # Carbon footprint estimate
+    # Carbon footprint estimate (energy is now in Wh, so divide by 2 instead of multiply by 500)
     try:
-        cf = round(float(energy) * 500, 2) if energy not in ('N/A', None) and energy else 'N/A'
+        cf = round(float(energy) * 0.5, 2) if energy not in ('N/A', None) and energy else 'N/A'
     except (ValueError, TypeError):
         cf = 'N/A'
-    
-    # Get product, reactants, solvents with safe defaults
-    product = data.get('product') or {}
-    reactants = data.get('reactants') or []
-    solvents = data.get('solvents') or []
-    catalysts = data.get('catalysts') or []
-    
-    # Build reactants table
-    reactants_rows = ""
-    if isinstance(reactants, list):
-        for i, r in enumerate(reactants, 1):
-            if isinstance(r, dict):
-                reactants_rows += f"""
-        <tr>
-            <td>{i}</td>
-            <td>{r.get('name', 'N/A')}</td>
-            <td>{r.get('mw', 'N/A')}</td>
-            <td>{r.get('mass_g', 'N/A')}</td>
-            <td>{r.get('carbon_atoms', 'N/A')}</td>
-            <td>{r.get('eq_used', 'N/A')}</td>
-        </tr>
-        """
-    
-    # Build solvents table
-    solvents_rows = ""
-    if isinstance(solvents, list):
-        for i, s in enumerate(solvents, 1):
-            if isinstance(s, dict):
-                solvents_rows += f"""
-        <tr>
-            <td>{i}</td>
-            <td>{s.get('name', 'N/A')}</td>
-            <td>{s.get('mass_g', 'N/A')}</td>
-            <td>{s.get('recovery_pct', 0)}%</td>
-        </tr>
-        """
-    
-    # Build catalysts table
-    catalysts_rows = ""
-    if isinstance(catalysts, list):
-        for i, c in enumerate(catalysts, 1):
-            if isinstance(c, dict):
-                catalysts_rows += f"""
-        <tr>
-            <td>{i}</td>
-            <td>{c.get('name', 'N/A')}</td>
-            <td>{c.get('mw', 'N/A')}</td>
-            <td>{c.get('mass_g', 'N/A')}</td>
-        </tr>
-        """
-    
-    # AI Suggestions
-    suggestions = data.get('ai_suggestions') or []
-    suggestions_html = ""
-    if isinstance(suggestions, list) and suggestions:
-        for sugg in suggestions:
-            if sugg:
-                suggestions_html += f"<li>{sugg}</li>"
-    if not suggestions_html:
-        suggestions_html = "<li>No suggestions available.</li>"
     
     # Simple color coding helper
     def metric_color(value, thresholds):
@@ -195,118 +135,72 @@ def generate_report_html(data: Dict[str, Any]) -> str:
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Green Chemistry Report</title>
+    <title>Green Chemistry Metrics Report</title>
     <style>
         body {{ font-family: Arial, sans-serif; padding: 20px; color: #333; }}
         .header {{ text-align: center; margin-bottom: 30px; border-bottom: 3px solid #059669; padding-bottom: 15px; }}
         .header h1 {{ color: #059669; font-size: 24px; margin: 0 0 10px 0; }}
-        .subtitle {{ color: #666; font-size: 12px; }}
-        .section {{ margin-bottom: 20px; page-break-inside: avoid; }}
-        .section-title {{ background: #059669; color: white; padding: 8px 12px; font-size: 16px; font-weight: bold; margin-bottom: 10px; }}
-        .metrics {{ display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px; }}
-        .metric {{ border: 1px solid #ddd; padding: 10px; text-align: center; background: #f9f9f9; }}
-        .metric .label {{ font-size: 10px; color: #666; font-weight: bold; text-transform: uppercase; }}
-        .metric .value {{ font-size: 20px; font-weight: bold; margin-top: 5px; }}
-        table {{ width: 100%; border-collapse: collapse; font-size: 11px; }}
-        th, td {{ border: 1px solid #ddd; padding: 6px; text-align: left; }}
-        th {{ background: #f0f0f0; font-weight: bold; }}
-        tr:nth-child(even) {{ background: #f9f9f9; }}
-        .product-box {{ background: #F0FDF4; border-left: 4px solid #059669; padding: 12px; margin-bottom: 12px; }}
-        .product-box h3 {{ color: #059669; margin: 0 0 8px 0; font-size: 14px; }}
-        .product-box p {{ margin: 3px 0; font-size: 12px; }}
-        .suggestions {{ background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 12px; }}
-        .suggestions ul {{ margin: 8px 0 0 20px; }}
-        .suggestions li {{ margin: 5px 0; font-size: 12px; }}
-        .footer {{ margin-top: 30px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center; font-size: 10px; color: #666; }}
-        .guide {{ background: #FFF7ED; border-left: 4px solid #F59E0B; padding: 10px; margin-top: 10px; font-size: 11px; }}
-        .guide h4 {{ color: #F59E0B; margin: 0 0 5px 0; font-size: 12px; }}
+        .subtitle {{ color: #666; font-size: 14px; }}
+        .metrics {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0; }}
+        .metric {{ border: 2px solid #ddd; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 8px; }}
+        .metric .label {{ font-size: 14px; color: #666; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }}
+        .metric .value {{ font-size: 32px; font-weight: bold; }}
+        .metric .unit {{ font-size: 16px; color: #666; font-weight: normal; }}
+        .footer {{ margin-top: 40px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center; font-size: 12px; color: #666; }}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Green Chemistry Simulation Report</h1>
+        <h1>Green Chemistry Metrics</h1>
         <div class="subtitle"><strong>{reaction_name}</strong><br>Generated: {timestamp}</div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Product Information</div>
-        <div class="product-box">
-            <h3>{product.get('name', 'Product')}</h3>
-            <p><strong>Molecular Weight:</strong> {product.get('mw', 'N/A')} g/mol</p>
-            <p><strong>Actual Mass:</strong> {product.get('actual_mass_g', 'N/A')} g</p>
-            <p><strong>Carbon Atoms:</strong> {product.get('carbon_atoms', 'N/A')}</p>
+    <div class="metrics">
+        <div class="metric">
+            <div class="label">Atom Economy</div>
+            <div class="value" style="color:{ae_color}">{ae}<span class="unit">%</span></div>
         </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Key Green Chemistry Metrics</div>
-        <div class="metrics">
-            <div class="metric"><div class="label">Atom Economy</div><div class="value" style="color:{ae_color}">{ae}%</div></div>
-            <div class="metric"><div class="label">PMI</div><div class="value">{pmi}</div></div>
-            <div class="metric"><div class="label">E-Factor</div><div class="value">{e_factor}</div></div>
-            <div class="metric"><div class="label">RME</div><div class="value" style="color:{rme_color}">{rme}%</div></div>
-            <div class="metric"><div class="label">Carbon Eff.</div><div class="value" style="color:{ce_color}">{ce}%</div></div>
-            <div class="metric"><div class="label">Stoich. Factor</div><div class="value">{sf}</div></div>
-            <div class="metric"><div class="label">Water Intensity</div><div class="value">{water}</div></div>
-            <div class="metric"><div class="label">Energy</div><div class="value">{energy}</div></div>
-            <div class="metric"><div class="label">Solvent Int.</div><div class="value">{si}</div></div>
-            <div class="metric"><div class="label">Carbon Footprint</div><div class="value">{cf}</div></div>
+        <div class="metric">
+            <div class="label">Process Mass Intensity</div>
+            <div class="value">{pmi}</div>
         </div>
-        <div class="guide">
-            <h4>Metrics Guide:</h4>
-            <ul>
-                <li><strong>Atom Economy:</strong> ≥80% excellent, 60-80% good, &lt;60% needs improvement</li>
-                <li><strong>PMI:</strong> &lt;10 pharmaceutical, &lt;5 fine chemicals, &lt;1 ideal</li>
-                <li><strong>E-Factor:</strong> Lower is better</li>
-            </ul>
+        <div class="metric">
+            <div class="label">E-Factor</div>
+            <div class="value">{e_factor}</div>
         </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Reactants</div>
-        <table>
-            <tr><th>#</th><th>Name</th><th>MW (g/mol)</th><th>Mass (g)</th><th>C Atoms</th><th>Eq. Used</th></tr>
-            {reactants_rows if reactants_rows else '<tr><td colspan="6">No reactants</td></tr>'}
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Solvents</div>
-        <table>
-            <tr><th>#</th><th>Name</th><th>Mass (g)</th><th>Recovery</th></tr>
-            {solvents_rows if solvents_rows else '<tr><td colspan="4">No solvents</td></tr>'}
-        </table>
-    </div>
-
-    {f'''<div class="section">
-        <div class="section-title">Catalysts</div>
-        <table>
-            <tr><th>#</th><th>Name</th><th>MW (g/mol)</th><th>Mass (g)</th></tr>
-            {catalysts_rows if catalysts_rows else '<tr><td colspan="4">No catalysts</td></tr>'}
-        </table>
-    </div>''' if catalysts else ''}
-
-    <div class="section">
-        <div class="section-title">Mass Balance</div>
-        <table>
-            <tr><th>Reactant Mass</th><td>{breakdown.get('reactant_mass_g', 0)} g</td></tr>
-            <tr><th>Catalyst Mass</th><td>{breakdown.get('catalyst_mass_g', 0)} g</td></tr>
-            <tr><th>Total Solvent Mass</th><td>{breakdown.get('solvent_mass_total_g', 0)} g</td></tr>
-            <tr><th>Aqueous Washes</th><td>{breakdown.get('aqueous_washes_g', 0)} g</td></tr>
-            <tr><th>Auxiliaries</th><td>{breakdown.get('auxiliaries_g', 0)} g</td></tr>
-            <tr style="background:#F0FDF4;font-weight:bold;"><th>Total Input</th><td>{breakdown.get('total_input_mass_g', 0)} g</td></tr>
-            <tr style="background:#F0FDF4;font-weight:bold;"><th>Product Mass</th><td>{breakdown.get('product_mass_g', 0)} g</td></tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">AI Recommendations</div>
-        <div class="suggestions"><ul>{suggestions_html}</ul></div>
+        <div class="metric">
+            <div class="label">Reaction Mass Efficiency</div>
+            <div class="value" style="color:{rme_color}">{rme}<span class="unit">%</span></div>
+        </div>
+        <div class="metric">
+            <div class="label">Carbon Efficiency</div>
+            <div class="value" style="color:{ce_color}">{ce}<span class="unit">%</span></div>
+        </div>
+        <div class="metric">
+            <div class="label">Stoichiometric Factor</div>
+            <div class="value">{sf}</div>
+        </div>
+        <div class="metric">
+            <div class="label">Water Intensity</div>
+            <div class="value">{water}<span class="unit">mL/g</span></div>
+        </div>
+        <div class="metric">
+            <div class="label">Energy Intensity</div>
+            <div class="value">{energy}<span class="unit">Wh/g</span></div>
+        </div>
+        <div class="metric">
+            <div class="label">Solvent Intensity</div>
+            <div class="value">{si}</div>
+        </div>
+        <div class="metric">
+            <div class="label">Carbon Footprint</div>
+            <div class="value">{cf}<span class="unit">g CO2/g</span></div>
+        </div>
     </div>
 
     <div class="footer">
         <p><strong>Green Toolkit</strong> - Sustainable Chemistry Analysis Platform</p>
-        <p>© {datetime.now().year} Green Toolkit. For educational and research purposes.</p>
+        <p>© {datetime.now().year} Green Toolkit. Generated on {timestamp}</p>
     </div>
 </body>
 </html>"""

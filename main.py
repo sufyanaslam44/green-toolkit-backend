@@ -503,6 +503,10 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         # Convert payload to dict for PDF generator
         data_dict = payload.model_dump()
         
+        # Convert energy from kWh to Wh for display in PDF (multiply by 1000)
+        if data_dict.get('energy_kWh_per_g') is not None:
+            data_dict['energy_Wh_per_g'] = data_dict['energy_kWh_per_g'] * 1000
+        
         print(f"[API] PDF request for: {data_dict.get('reaction_name', 'unnamed')}")
         
         # Add timeout to prevent hanging
