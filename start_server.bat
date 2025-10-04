@@ -1,5 +1,5 @@
 @echo off
-REM Start FastAPI server with Windows compatibility for Playwright
+REM Start FastAPI server
 
 echo ========================================
 echo Starting Green Toolkit Backend Server
@@ -7,7 +7,6 @@ echo ========================================
 echo.
 echo Platform: Windows
 echo Python: 3.13+
-echo Playwright: Enabled
 echo.
 
 REM Activate virtual environment if it exists

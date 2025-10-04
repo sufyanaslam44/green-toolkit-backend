@@ -1,14 +1,8 @@
 """
-Startup script for FastAPI server with Windows compatibility
-This must be run BEFORE uvicorn to set the correct event loop policy
+Startup script for FastAPI server
 """
 import sys
-import asyncio
-
-# CRITICAL: Set Windows event loop policy BEFORE importing FastAPI/uvicorn
-if sys.platform == 'win32':
-    # Use ProactorEventLoop for subprocess support (needed by Playwright)
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+import os
 
 # Now import and run uvicorn
 import uvicorn

@@ -38,12 +38,9 @@ git push origin main
 5. Wait ~5-10 minutes
 
 > **When to use Clear Cache:**
-> - Playwright/browser version issues
 > - Dependency conflicts
 > - Mysterious build failures
-> - After changing build commands
-
----
+> - After changing build commands---
 
 ## Method 3: Rollback to Previous Version
 
@@ -82,8 +79,8 @@ If new deployment breaks something:
 
 ### Scenario 1: Changed Python Code
 ```bash
-git add main.py pdf_generator.py
-git commit -m "Fixed PDF generation logic"
+git add main.py
+git commit -m "Updated API logic"
 git push origin main
 # Render auto-deploys ✓
 ```
@@ -91,7 +88,7 @@ git push origin main
 ### Scenario 2: Updated Dependencies
 ```bash
 git add requirements.txt
-git commit -m "Updated playwright to 1.48.0"
+git commit -m "Updated packages"
 git push origin main
 # ⚠️ THEN: Clear build cache in Render dashboard
 ```
@@ -117,7 +114,6 @@ git push origin main
 ## ⚡ Quick Checklist Before Pushing
 
 - [ ] Code runs locally without errors
-- [ ] PDF generation works on localhost
 - [ ] All files committed to git
 - [ ] Pushed to GitHub
 - [ ] Build command in render.yaml is correct
@@ -138,12 +134,6 @@ git push origin main
 1. Check runtime logs
 2. Verify start command: `python run_server.py`
 3. Check if PORT environment variable is used
-4. Verify Chromium installed correctly
-
-### PDF Generation Fails
-1. Check runtime logs for Chromium path
-2. Verify Playwright version matches Chromium build
-3. Clear build cache if needed
 4. Check memory usage (may need to upgrade plan)
 
 ---

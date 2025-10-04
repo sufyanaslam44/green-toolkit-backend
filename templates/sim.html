@@ -401,7 +401,7 @@
     <!-- Action Buttons -->
     <div class="md:col-span-2 flex justify-center gap-4">
       <button id="ask-ai" class="hidden rounded-lg bg-blue-600 text-white px-6 py-3 text-sm font-medium hover:bg-blue-700 shadow-md">Ask AI</button>
-      <button id="generate-pdf" class="hidden rounded-lg bg-emerald-600 text-white px-6 py-3 text-sm font-medium hover:bg-emerald-700 shadow-md">Generate PDF Report</button>
+      <button id="generate-pdf" class="hidden rounded-lg bg-green-600 text-white px-6 py-3 text-sm font-medium hover:bg-green-700 shadow-md">Generate PDF</button>
     </div>
   </div>
 </section>
@@ -1005,18 +1005,7 @@ function drawEfficiencyDials(data) {
 
     // Render all UI outputs
     function renderAll(data) {
-      // Store the last simulation data globally for PDF generation
-      // Store both the API response (computed metrics) AND the input payload
-      window.lastSimulationData = {
-        ...data,  // API response with computed metrics
-        // Also store current input data
-        product: buildPayload().product,
-        reactants: buildPayload().reactants,
-        solvents: buildPayload().solvents || [],
-        catalysts: buildPayload().catalysts || [],
-        workup: buildPayload().workup,
-        conditions: buildPayload().conditions
-      };
+
       
       // number cards
       setTxt('#r_ae',     data.atom_economy_pct ?? '—');
@@ -1070,8 +1059,6 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
         });
   const data = await res.json();
   if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
-  // Persist last successful simulation (used for PDF generation)
-  window.lastSimulationData = data;
   renderAll(data);
         
         // Show Ask AI and Generate PDF buttons after successful simulation
@@ -1087,91 +1074,35 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
     document.getElementById('simulate').onclick = runSim;
     document.getElementById('reset').onclick = () => location.reload();
     
-    // Generate PDF Report handler
-    document.getElementById('generate-pdf').onclick = async () => {
-      try {
-        // Check if we have simulation data
-        if (!window.lastSimulationData) {
-          alert('Please run a simulation first before generating a PDF report.');
-          return;
-        }
-        
-        // Get reaction name
-        const reactionName = document.getElementById('reaction_name')?.value || 'Green Chemistry Simulation';
-        
-        // Prepare complete payload with all data
-        const fullPayload = {
-          // Include all data from lastSimulationData (has both input and computed metrics)
-          ...window.lastSimulationData,
-          // Add reaction name
-          reaction_name: reactionName,
-          // Add AI suggestions from the page
-          ai_suggestions: Array.from(document.querySelectorAll('#ai-suggestions li'))
-            .map(li => li.textContent.trim())
-            .filter(t => t && !t.includes('Run simulation') && !t.includes('No suggestions'))
-        };
-        
-        // Show loading state
-        const btn = document.getElementById('generate-pdf');
-        const originalText = btn.textContent;
-        btn.textContent = 'Generating PDF...';
-        btn.disabled = true;
-        
-        // Call API to generate PDF
-        let response;
-        try {
-          response = await fetch('/api/generate-pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fullPayload)
-          });
-        } catch(networkErr) {
-          throw new Error('Network error contacting server. Check connectivity or server logs.');
-        }
-
-        if (!response.ok) {
-          let errorMsg = `PDF generation failed (status ${response.status})`;
-          try {
-            const error = await response.json();
-            if (error) {
-              if (typeof error.detail === 'string') errorMsg = error.detail;
-              else if (error.detail && typeof error.detail === 'object') {
-                errorMsg = error.detail.message || JSON.stringify(error.detail);
-              } else if (error.message) errorMsg = error.message;
-            }
-          } catch(_) {
-            // fallback to text
-            try { errorMsg = await response.text(); } catch(_) {}
-          }
-          throw new Error(errorMsg);
-        }
-        
-        // Download the PDF
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `green_chem_report_${reactionName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        // Restore button
-        btn.textContent = originalText;
-        btn.disabled = false;
-        
-        alert('PDF report generated successfully!');
-      } catch (err) {
-        console.error('PDF generation error:', err);
-        alert(`Error generating PDF: ${err.message}`);
-        
-        // Restore button
-        const btn = document.getElementById('generate-pdf');
-        btn.textContent = 'Generate PDF Report';
-        btn.disabled = false;
-      }
+    // PDF Generation functionality
+    document.getElementById('generate-pdf').onclick = () => {
+      // Basic PDF generation using window.print() - can be enhanced with libraries like jsPDF
+      const originalTitle = document.title;
+      document.title = 'Green Chemistry Simulation Report';
+      
+      // Create print-friendly version
+      const printButton = document.getElementById('generate-pdf');
+      const aiButton = document.getElementById('ask-ai');
+      const simulateButton = document.getElementById('simulate');
+      const resetButton = document.getElementById('reset');
+      
+      // Hide buttons during print
+      [printButton, aiButton, simulateButton, resetButton].forEach(btn => {
+        if (btn) btn.style.display = 'none';
+      });
+      
+      // Trigger print dialog
+      window.print();
+      
+      // Restore buttons after print
+      [printButton, aiButton, simulateButton, resetButton].forEach(btn => {
+        if (btn) btn.style.display = '';
+      });
+      
+      // Restore title
+      document.title = originalTitle;
     };
+
   </script>
 </body>
 </html>

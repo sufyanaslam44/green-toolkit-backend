@@ -11,12 +11,7 @@ ENV/
 dist/
 build/
 
-# Generated PDFs
-*.pdf
 
-# Testing files
-test_*.pdf
-*_test.pdf
 
 # Environment variables
 .env

@@ -17,28 +17,11 @@
 
 ### **Technical Guides:**
 
-2. **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Project organization
-   - Directory structure
-   - File purposes
-   - Git repository info
-   - Working directory guide
-
-3. **[PLAYWRIGHT_VERSIONS.md](PLAYWRIGHT_VERSIONS.md)** - Version information
-   - Local vs Render environment
-   - Playwright & Chromium versions
-   - Compatibility matrix
-   - Installation details
-
-4. **[UPDATE_RENDER.md](UPDATE_RENDER.md)** - Deployment guide
+2. **[UPDATE_RENDER.md](UPDATE_RENDER.md)** - Deployment guide
    - How to update Render.com
    - Manual vs automatic deployment
    - Clearing build cache
    - Monitoring deployments
-
-5. **[BUG_FIX_ERROR_DISPLAY.md](BUG_FIX_ERROR_DISPLAY.md)** - Error handling
-   - Bug fix documentation
-   - Error message improvements
-   - "[object Object]" fix
 
 ---
 
@@ -46,22 +29,18 @@
 
 ### **For First-Time Setup:**
 1. Read [README.md](README.md) - Installation & Quick Start
-2. Check [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Understand the layout
 
 ### **For Deployment:**
 1. Read [UPDATE_RENDER.md](UPDATE_RENDER.md) - Deployment process
-2. Check [PLAYWRIGHT_VERSIONS.md](PLAYWRIGHT_VERSIONS.md) - Verify versions
 
 ### **For Troubleshooting:**
 1. Check [README.md](README.md) - Troubleshooting section
-2. Review [BUG_FIX_ERROR_DISPLAY.md](BUG_FIX_ERROR_DISPLAY.md) - Known fixes
 
 ---
 
 ## 🔑 Key Files (Not Documentation)
 
 - **`main.py`** - FastAPI application (core)
-- **`pdf_generator.py`** - PDF generation logic
 - **`run_server.py`** - Server startup script
 - **`requirements.txt`** - Python dependencies
 - **`render.yaml`** - Render.com configuration

@@ -10,32 +10,8 @@ from math import isfinite
 import os
 import sys
 import asyncio
-from pdf_generator import generate_simulation_pdf
 
-# ------------------------------------------------------------------------------
-# Fix for Windows + Python 3.13 + Playwright subprocess issue
-# ------------------------------------------------------------------------------
-if sys.platform == 'win32':
-    # Set the event loop policy to use ProactorEventLoop on Windows
-    # This is required for subprocess support which Playwright needs
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    
-    # Check if the policy was set correctly
-    policy = asyncio.get_event_loop_policy()
-    if not isinstance(policy, asyncio.WindowsProactorEventLoopPolicy):
-        print("=" * 80)
-        print("⚠️  WARNING: Event loop policy not set correctly!")
-        print("⚠️  PDF generation will FAIL with NotImplementedError")
-        print("=" * 80)
-        print("SOLUTION: Start server using one of these methods:")
-        print("  1. python run_server.py")
-        print("  2. start_server.bat")
-        print("  3. .\\start_server.ps1")
-        print("")
-        print("❌ DO NOT USE: uvicorn main:app --reload")
-        print("=" * 80)
-    else:
-        print(f"✅ Windows ProactorEventLoop policy set correctly")
+
 
 # ------------------------------------------------------------------------------
 # App & paths
@@ -61,39 +37,7 @@ if static_dir.is_dir():
 # Templates
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-# ------------------------------------------------------------------------------
-# Startup event - Check Playwright/Chromium availability
-# ------------------------------------------------------------------------------
-@app.on_event("startup")
-async def startup_event():
-    """Check if Playwright and Chromium are properly installed"""
-    print("=" * 60)
-    print("🚀 Green Toolkit Backend Starting...")
-    print(f"📁 Base directory: {BASE_DIR}")
-    print(f"🐍 Python: {sys.version}")
-    print(f"💻 Platform: {sys.platform}")
-    
-    # Check if Chromium is available (use async API)
-    try:
-        from playwright.async_api import async_playwright
-        async with async_playwright() as p:
-            browser_type = p.chromium
-            # Get executable path without launching
-            exec_path = browser_type.executable_path
-            print(f"✅ Chromium found at: {exec_path}")
-            
-            # Verify the file actually exists
-            import os
-            if os.path.exists(exec_path):
-                print(f"✅ Chromium executable verified")
-            else:
-                print(f"❌ Chromium executable does not exist at path!")
-    except Exception as e:
-        print(f"⚠️  Chromium check failed: {e}")
-        print("⚠️  PDF generation may not work!")
-        print("⚠️  Run: python -m playwright install chromium")
-    
-    print("=" * 60)
+
 
 # ------------------------------------------------------------------------------
 # Health
@@ -471,118 +415,9 @@ def reaction_impact(payload: ReactionImpactIn):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
 
-# ------------------------------------------------------------------------------
-# PDF Generation API
-# ------------------------------------------------------------------------------
-class PDFGenerationIn(BaseModel):
-    """Request body for PDF generation - includes all simulation data"""
-    reaction_name: Optional[str] = "Green Chemistry Simulation"
-    product: Product
-    reactants: List[Reactant]
-    solvents: List[Solvent] = Field(default_factory=list)
-    catalysts: List[Catalyst] = Field(default_factory=list)
-    workup: Workup = Workup()
-    conditions: Conditions = Conditions()
-    # Include computed metrics
-    atom_economy_pct: Optional[float] = None
-    pmi: Optional[float] = None
-    e_factor: Optional[float] = None
-    water_mL_per_g: Optional[float] = None
-    energy_kWh_per_g: Optional[float] = None
-    rme_pct: Optional[float] = None
-    carbon_efficiency_pct: Optional[float] = None
-    sf_overall: Optional[float] = None
-    sf_details: Optional[List[SFDetail]] = None
-    breakdown: Optional[Dict[str, Any]] = None
-    ai_suggestions: List[str] = Field(default_factory=list)
 
-@app.post("/api/generate-pdf")
-async def generate_pdf_report(payload: PDFGenerationIn):
-    """Generate a PDF report from simulation data"""
-    try:
-        # Convert payload to dict for PDF generator
-        data_dict = payload.model_dump()
-        
-        # Convert energy from kWh to Wh for display in PDF (multiply by 1000)
-        if data_dict.get('energy_kWh_per_g') is not None:
-            data_dict['energy_Wh_per_g'] = data_dict['energy_kWh_per_g'] * 1000
-        
-        print(f"[API] PDF request for: {data_dict.get('reaction_name', 'unnamed')}")
-        
-        # Add timeout to prevent hanging
-        import asyncio
-        try:
-            # 60 second timeout for PDF generation
-            pdf_path = await asyncio.wait_for(
-                generate_simulation_pdf(data_dict),
-                timeout=60.0
-            )
-        except asyncio.TimeoutError:
-            raise HTTPException(
-                status_code=504,
-                detail="PDF generation timed out (>60s). Service may be under heavy load."
-            )
-        
-        # Return the PDF file
-        return FileResponse(
-            path=pdf_path,
-            media_type='application/pdf',
-            filename=Path(pdf_path).name,
-            headers={
-                "Content-Disposition": f'attachment; filename="{Path(pdf_path).name}"'
-            }
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
-    except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
-        print(f"[API] ❌ PDF generation error:\n{error_trace}")
-        
-        # Return simple error message string
-        error_msg = str(e)
-        if "Executable doesn't exist" in error_msg:
-            error_msg = "Chromium browser not installed on server. Please contact administrator."
-        
-        raise HTTPException(
-            status_code=500,
-            detail=f"PDF generation failed: {error_msg}"
-        )
 
-# ------------------------------------------------------------------------------
-# Diagnostics: PDF generation self-test (non-sensitive)
-# ------------------------------------------------------------------------------
-@app.get("/api/diagnostics/pdf")
-async def pdf_diagnostic():
-    """Lightweight health-style check for PDF generation.
-    Returns JSON (does not stream the file) with success/failure metadata.
-    Set DISABLE_PDF=1 to intentionally disable PDF generation.
-    """
-    import os, json as _json, asyncio as _asyncio
-    if os.getenv("DISABLE_PDF") == "1":
-        return {"ok": False, "disabled": True, "error": "PDF generation disabled via DISABLE_PDF env"}
-    sample = {
-        "reaction_name": "Diagnostic Test",
-        "atom_economy_pct": 80.0,
-        "pmi": 10.0,
-        "e_factor": 9.0,
-        "rme_pct": 70.0,
-        "carbon_efficiency_pct": 75.0,
-        "sf_overall": 1.05,
-        "water_mL_per_g": 5.0,
-        "energy_kWh_per_g": 0.01,
-        "product": {"name": "X", "mw": 100.0, "actual_mass_g": 5.0, "carbon_atoms": 6},
-        "reactants": [{"name": "R1", "mw": 120.0, "mass_g": 6.0, "carbon_atoms": 7, "eq_used": 1.0, "eq_stoich": 1.0}],
-        "solvents": [],
-        "breakdown": {"product_mass_g": 5.0, "solvent_mass_total_g": 0.0}
-    }
-    try:
-        path = await generate_simulation_pdf(sample)
-        import os as _os
-        size = _os.path.getsize(path) if _os.path.exists(path) else None
-        return {"ok": True, "path": path, "size_bytes": size}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
+
 
 # ------------------------------------------------------------------------------
 # Pages (Jinja templates)

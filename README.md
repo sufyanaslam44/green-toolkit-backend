@@ -1,6 +1,6 @@
 # Green Chemistry Toolkit Backend
 
-FastAPI backend for the Green Chemistry Toolkit with PDF report generation.
+FastAPI backend for the Green Chemistry Toolkit.
 
 ## 🚀 Quick Start
 
@@ -24,18 +24,9 @@ FastAPI backend for the Green Chemistry Toolkit with PDF report generation.
 pip install -r requirements.txt
 ```
 
-3. **Install Playwright browsers:**
-```bash
-python -m playwright install chromium
-```
-
 ### Running the Server
 
-**⚠️ CRITICAL for Windows + Python 3.13:**
-
-You **MUST** use the provided startup script to ensure Playwright works correctly.
-
-#### ✅ CORRECT METHODS:
+### Running the Server
 
 **Option 1: Python Script (Recommended)**
 ```bash
@@ -52,26 +43,10 @@ start_server.bat
 .\start_server.ps1
 ```
 
-#### ❌ WRONG METHODS (WILL FAIL):
-
+**Alternative: Direct Uvicorn**
 ```bash
-# ❌ DO NOT USE - Will cause NotImplementedError
 uvicorn main:app --reload
-
-# ❌ DO NOT USE - Will cause NotImplementedError
-python -m uvicorn main:app --reload
 ```
-
-**Why?** These commands create the event loop BEFORE the Windows compatibility policy can be set, causing `NotImplementedError` when Playwright tries to spawn subprocess.
-
-**Error you'll see if using wrong method:**
-```
-NotImplementedError
-  File "C:\Program Files\Python313\Lib\asyncio\base_events.py", line 539
-    raise NotImplementedError
-```
-
-**Solution:** Kill the server and restart using `python run_server.py`
 
 
 ### Access the Application
@@ -94,7 +69,6 @@ NotImplementedError
 
 #### Comprehensive Analysis
 - `POST /api/impact/compute` - Compute all green chemistry metrics
-- `POST /api/generate-pdf` - Generate PDF report
 
 #### Web Pages
 - `GET /` - Home page
@@ -102,22 +76,13 @@ NotImplementedError
 - `GET /tools` - Tools & calculators
 - `GET /gamification` - Gamification page
 
-### PDF Report Generation
 
-Generate professional PDF reports with:
-- Reaction details (name, product, reactants, solvents, catalysts)
-- All computed metrics (Atom Economy, PMI, E-factor, RME, Carbon Efficiency, Safety Factor)
-- Water intensity and energy metrics
-- Detailed breakdown of masses
-- AI improvement suggestions
-- Professional formatting with color-coded metrics
 
 ## 🏗️ Project Structure
 
 ```
 green-toolkit-backend/
 ├── main.py                 # FastAPI application and endpoints
-├── pdf_generator.py        # PDF generation using Playwright
 ├── run_server.py          # Server startup script (USE THIS!)
 ├── start_server.bat       # Windows batch startup
 ├── start_server.ps1       # PowerShell startup
@@ -146,12 +111,6 @@ Edit `run_server.py` to change:
 
 ## 🐛 Troubleshooting
 
-### Issue: `NotImplementedError` when generating PDF
-
-**Cause:** Using `uvicorn` directly on Windows with Python 3.13
-
-**Solution:** Use `python run_server.py` instead
-
 ### Issue: Port 8000 already in use
 
 **Solution:**
@@ -163,39 +122,9 @@ Get-Process | Where-Object { $_.ProcessName -eq "python" } | Stop-Process -Force
 python run_server.py
 ```
 
-### Issue: Playwright browsers not found
 
-**Solution:**
-```bash
-python -m playwright install chromium
-```
 
 ## 📚 API Examples
-
-### Generate PDF Report
-
-```bash
-curl -X POST http://localhost:8000/api/generate-pdf \
-  -H "Content-Type: application/json" \
-  -d '{
-    "reaction_name": "Synthesis of Aspirin",
-    "product": {
-      "name": "aspirin",
-      "mw": 180.16,
-      "actual_mass_g": 10.0
-    },
-    "reactants": [
-      {
-        "name": "salicylic acid",
-        "mw": 138.12,
-        "mass_g": 12.0
-      }
-    ],
-    "atom_economy_pct": 85.5,
-    "pmi": 2.5,
-    "e_factor": 1.5
-  }'
-```
 
 ### Compute All Metrics
 

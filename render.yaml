@@ -5,28 +5,12 @@ services:
     env: python
     region: oregon
     plan: free
-    # Install dependencies then install Chromium for Playwright.
-    # NOTE: On the free plan you cannot apt-get system libs; if Chromium fails due to missing
-    # libraries you may need a Docker service on a paid plan.
-    buildCommand: pip install -r requirements.txt && python -m playwright install chromium
+    # Install dependencies
+    buildCommand: pip install -r requirements.txt
     startCommand: python run_server.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
-      - key: PLAYWRIGHT_BROWSERS_PATH
-        value: /opt/render/.cache/ms-playwright
-      # Optional: verbose PDF debug logs (set to 1 temporarily when diagnosing)
-      - key: PDF_DEBUG
-        value: 0
-      # Optional: force disable PDF generation if you need to keep service up while investigating
-      - key: DISABLE_PDF
-        value: 0
-      # Optional: custom temp directory for PDF outputs (Render ephemeral FS is fine by default)
-      - key: PDF_TMP_DIR
-        value: /tmp
-      # Safety: ensure we do NOT skip browser download
-      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
-        value: 0
     
     # Health check
     healthCheckPath: /api/health

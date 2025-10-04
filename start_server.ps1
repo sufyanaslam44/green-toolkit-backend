@@ -1,4 +1,4 @@
-# Start FastAPI server with Windows compatibility for Playwright
+# Start FastAPI server
 
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "Starting Green Toolkit Backend Server" -ForegroundColor Green
@@ -6,7 +6,6 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Platform: Windows" -ForegroundColor Cyan
 Write-Host "Python: 3.13+" -ForegroundColor Cyan
-Write-Host "Playwright: Enabled" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if virtual environment exists and activate
