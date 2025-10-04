@@ -22,7 +22,7 @@ Before deploying to Render.com, ensure:
 ### 2. Build Settings
 
 ```yaml
-buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+buildCommand: pip install --upgrade pip && pip install --no-cache-dir --only-binary=all -r requirements.txt
 ``` 
 **Build Time:** ~3-5 minutes (with cache)  
 **Memory Usage:** ~200-300 MB during build
@@ -137,6 +137,13 @@ Successfully installed fastapi-0.104.1 uvicorn-0.24.0 ...
 ```python
 port = int(os.environ.get("PORT", 8000))
 ```
+
+### Issue 5: Rust Compilation Error
+**Symptoms:** `maturin failed`, `Cargo metadata failed`, or Rust toolchain errors  
+**Solution:** Avoid dependencies that require Rust compilation:
+- Use `uvicorn` instead of `uvicorn[standard]` 
+- Add `--only-binary=all` to build command
+- Remove `watchfiles`, `cryptography[rust]`, or other Rust-dependent packages
 
 ## 📊 Expected Performance
 
