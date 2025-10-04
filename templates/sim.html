@@ -1068,9 +1068,11 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
           method: 'POST', headers: { 'Content-Type':'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
-        renderAll(data);
+  const data = await res.json();
+  if (!res.ok) { err.textContent = data.detail || 'Server error.'; err.classList.remove('hidden'); return; }
+  // Persist last successful simulation (used for PDF generation)
+  window.lastSimulationData = data;
+  renderAll(data);
         
         // Show Ask AI and Generate PDF buttons after successful simulation
         const aiBtn = document.getElementById('ask-ai');
@@ -1116,22 +1118,30 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
         btn.disabled = true;
         
         // Call API to generate PDF
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(fullPayload)
-        });
-        
+        let response;
+        try {
+          response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(fullPayload)
+          });
+        } catch(networkErr) {
+          throw new Error('Network error contacting server. Check connectivity or server logs.');
+        }
+
         if (!response.ok) {
-          let errorMsg = 'PDF generation failed';
+          let errorMsg = `PDF generation failed (status ${response.status})`;
           try {
             const error = await response.json();
-            // Handle both string and object detail formats
-            errorMsg = typeof error.detail === 'string' 
-              ? error.detail 
-              : error.detail?.message || error.message || JSON.stringify(error.detail) || errorMsg;
-          } catch (e) {
-            errorMsg = `Server error (${response.status})`;
+            if (error) {
+              if (typeof error.detail === 'string') errorMsg = error.detail;
+              else if (error.detail && typeof error.detail === 'object') {
+                errorMsg = error.detail.message || JSON.stringify(error.detail);
+              } else if (error.message) errorMsg = error.message;
+            }
+          } catch(_) {
+            // fallback to text
+            try { errorMsg = await response.text(); } catch(_) {}
           }
           throw new Error(errorMsg);
         }

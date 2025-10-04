@@ -550,6 +550,41 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         )
 
 # ------------------------------------------------------------------------------
+# Diagnostics: PDF generation self-test (non-sensitive)
+# ------------------------------------------------------------------------------
+@app.get("/api/diagnostics/pdf")
+async def pdf_diagnostic():
+    """Lightweight health-style check for PDF generation.
+    Returns JSON (does not stream the file) with success/failure metadata.
+    Set DISABLE_PDF=1 to intentionally disable PDF generation.
+    """
+    import os, json as _json, asyncio as _asyncio
+    if os.getenv("DISABLE_PDF") == "1":
+        return {"ok": False, "disabled": True, "error": "PDF generation disabled via DISABLE_PDF env"}
+    sample = {
+        "reaction_name": "Diagnostic Test",
+        "atom_economy_pct": 80.0,
+        "pmi": 10.0,
+        "e_factor": 9.0,
+        "rme_pct": 70.0,
+        "carbon_efficiency_pct": 75.0,
+        "sf_overall": 1.05,
+        "water_mL_per_g": 5.0,
+        "energy_kWh_per_g": 0.01,
+        "product": {"name": "X", "mw": 100.0, "actual_mass_g": 5.0, "carbon_atoms": 6},
+        "reactants": [{"name": "R1", "mw": 120.0, "mass_g": 6.0, "carbon_atoms": 7, "eq_used": 1.0, "eq_stoich": 1.0}],
+        "solvents": [],
+        "breakdown": {"product_mass_g": 5.0, "solvent_mass_total_g": 0.0}
+    }
+    try:
+        path = await generate_simulation_pdf(sample)
+        import os as _os
+        size = _os.path.getsize(path) if _os.path.exists(path) else None
+        return {"ok": True, "path": path, "size_bytes": size}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+# ------------------------------------------------------------------------------
 # Pages (Jinja templates)
 # ------------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
