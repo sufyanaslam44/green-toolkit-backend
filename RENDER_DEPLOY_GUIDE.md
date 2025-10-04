@@ -15,18 +15,15 @@ Before deploying to Render.com, ensure:
 ### 1. Service Configuration
 
 **Service Type:** Web Service  
-**Environment:** Python 3.11.7  
+**Environment:** Python 3.13.4  
 **Region:** Oregon (US-West)  
 **Plan:** Free Tier (512 MB RAM, 0.1 CPU)
 
 ### 2. Build Settings
 
 ```yaml
-buildCommand: |
-  pip install --upgrade pip
-  pip install -r requirements.txt
-```
-
+buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+``` 
 **Build Time:** ~3-5 minutes (with cache)  
 **Memory Usage:** ~200-300 MB during build
 
@@ -45,7 +42,7 @@ Set these in Render Dashboard → Environment:
 
 | Variable | Value | Description |
 |----------|--------|-------------|
-| `PYTHON_VERSION` | `3.11.7` | Python version (auto-set) |
+| `PYTHON_VERSION` | `3.13.4` | Python version (auto-set) |
 | `PORT` | (auto) | Service port (auto-generated) |
 | `ENV` | `production` | Environment identifier |
 
@@ -97,8 +94,8 @@ Use when dependencies change:
 ### Build Logs
 ```bash
 # Sample successful build log:
-==> Downloading and installing python 3.11.7...
-==> Using Python version 3.11.7 (default)
+==> Downloading and installing python 3.13.4...
+==> Using Python version 3.13.4 (default)
 ==> Installing dependencies with pip...
 Successfully installed fastapi-0.104.1 uvicorn-0.24.0 ...
 ==> Build successful! 🎉
@@ -207,5 +204,5 @@ graph LR
 
 **Last Updated:** October 4, 2025  
 **Render Plan:** Free Tier (512 MB RAM)  
-**Python Version:** 3.11.7  
+**Python Version:** 3.13.4  
 **Framework:** FastAPI + Uvicorn

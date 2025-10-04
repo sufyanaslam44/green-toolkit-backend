@@ -7,9 +7,7 @@ services:
     plan: free
     
     # Build Configuration
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     
     # Start Configuration
     startCommand: python run_server.py
@@ -17,7 +15,7 @@ services:
     # Environment Variables
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.7
+        value: 3.13.4
       - key: PORT
         generateValue: true
       - key: ENV
