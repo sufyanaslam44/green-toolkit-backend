@@ -62,6 +62,31 @@ if static_dir.is_dir():
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # ------------------------------------------------------------------------------
+# Startup event - Check Playwright/Chromium availability
+# ------------------------------------------------------------------------------
+@app.on_event("startup")
+async def startup_event():
+    """Check if Playwright and Chromium are properly installed"""
+    print("=" * 60)
+    print("🚀 Green Toolkit Backend Starting...")
+    print(f"📁 Base directory: {BASE_DIR}")
+    print(f"🐍 Python: {sys.version}")
+    print(f"💻 Platform: {sys.platform}")
+    
+    # Check if Chromium is available
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser_type = p.chromium
+            # Just check if executable exists, don't launch
+            print(f"✅ Chromium found at: {browser_type.executable_path}")
+    except Exception as e:
+        print(f"⚠️  Chromium check failed: {e}")
+        print("⚠️  PDF generation may not work!")
+    
+    print("=" * 60)
+
+# ------------------------------------------------------------------------------
 # Health
 # ------------------------------------------------------------------------------
 @app.get("/api/health")
@@ -471,8 +496,19 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         
         print(f"[API] PDF request for: {data_dict.get('reaction_name', 'unnamed')}")
         
-        # Generate PDF
-        pdf_path = await generate_simulation_pdf(data_dict)
+        # Add timeout to prevent hanging
+        import asyncio
+        try:
+            # 60 second timeout for PDF generation
+            pdf_path = await asyncio.wait_for(
+                generate_simulation_pdf(data_dict),
+                timeout=60.0
+            )
+        except asyncio.TimeoutError:
+            raise HTTPException(
+                status_code=504,
+                detail="PDF generation timed out (>60s). Service may be under heavy load."
+            )
         
         # Return the PDF file
         return FileResponse(
@@ -483,10 +519,22 @@ async def generate_pdf_report(payload: PDFGenerationIn):
                 "Content-Disposition": f'attachment; filename="{Path(pdf_path).name}"'
             }
         )
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
         import traceback
-        print(f"PDF generation error: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+        error_trace = traceback.format_exc()
+        print(f"[API] ❌ PDF generation error:\n{error_trace}")
+        
+        # Return detailed error for debugging
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "PDF generation failed",
+                "message": str(e),
+                "type": type(e).__name__
+            }
+        )
 
 # ------------------------------------------------------------------------------
 # Pages (Jinja templates)
