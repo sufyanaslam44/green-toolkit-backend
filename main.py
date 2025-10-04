@@ -73,16 +73,25 @@ async def startup_event():
     print(f"🐍 Python: {sys.version}")
     print(f"💻 Platform: {sys.platform}")
     
-    # Check if Chromium is available
+    # Check if Chromium is available (use async API)
     try:
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
+        from playwright.async_api import async_playwright
+        async with async_playwright() as p:
             browser_type = p.chromium
-            # Just check if executable exists, don't launch
-            print(f"✅ Chromium found at: {browser_type.executable_path}")
+            # Get executable path without launching
+            exec_path = browser_type.executable_path
+            print(f"✅ Chromium found at: {exec_path}")
+            
+            # Verify the file actually exists
+            import os
+            if os.path.exists(exec_path):
+                print(f"✅ Chromium executable verified")
+            else:
+                print(f"❌ Chromium executable does not exist at path!")
     except Exception as e:
         print(f"⚠️  Chromium check failed: {e}")
         print("⚠️  PDF generation may not work!")
+        print("⚠️  Run: python -m playwright install chromium")
     
     print("=" * 60)
 
