@@ -563,6 +563,12 @@ def tools_page(request: Request):
     context = {"request": request, "title": "Tools & Calculators"}
     return templates.TemplateResponse("tools.html", context)
 
+# ------------------------------------------------------------------------------
+# Optional: One-App Mode for Vite frontend (currently not used)
+# ------------------------------------------------------------------------------
+# If you want to serve a Vite-built SPA at /app, set FRONTEND_DIST env variable
+# to point to your dist folder. Otherwise, this section is ignored.
+
 @app.get("/simulate", response_class=HTMLResponse)
 def simulate_page(request: Request):
     context = {"request": request, "title": "Simulations"}
