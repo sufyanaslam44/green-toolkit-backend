@@ -6,8 +6,8 @@ services:
     region: oregon
     plan: free
     
-    # Build Configuration - use Python 3.11 for better wheel compatibility
-    buildCommand: pip install --upgrade pip && pip install --only-binary=all -r requirements.txt
+    # Build Configuration - optimized for Python 3.13.4 and current packages
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
     
     # Start Configuration
     startCommand: python run_server.py
@@ -15,7 +15,7 @@ services:
     # Environment Variables
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: 3.13.4
       - key: PORT
         generateValue: true
       - key: ENV

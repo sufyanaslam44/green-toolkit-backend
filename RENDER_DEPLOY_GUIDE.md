@@ -22,7 +22,7 @@ Before deploying to Render.com, ensure:
 ### 2. Build Settings
 
 ```yaml
-buildCommand: pip install --upgrade pip && pip install --no-cache-dir --only-binary=all -r requirements.txt
+buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 ``` 
 **Build Time:** ~3-5 minutes (with cache)  
 **Memory Usage:** ~200-300 MB during build

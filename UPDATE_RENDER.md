@@ -2,7 +2,7 @@
 
 ## Method 1: Automatic Deployment (When You Make Code Changes)
 
-Render automatically deploys when you push to GitHub:
+Render automatically3. Check Python version (3.13.4 configured)deploys when you push to GitHub:
 
 ```bash
 # 1. Make your code changes
