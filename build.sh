@@ -4,10 +4,10 @@
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
 
-echo "Installing Playwright browsers..."
-playwright install chromium
+echo "Installing Playwright Chromium browser..."
+playwright install --with-deps chromium 2>/dev/null || playwright install chromium
 
-echo "Installing system dependencies for Playwright..."
-playwright install-deps chromium
+# Note: Trying --with-deps first, but falling back to basic install if it fails
+# Render.com has most system dependencies pre-installed
 
 echo "Build completed successfully!"
