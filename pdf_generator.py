@@ -30,6 +30,21 @@ CHROMIUM_FLAGS = [
     "--disable-renderer-backgrounding",
 ]
 
+async def _attempt_install_chromium():
+    """Attempt a one-time on-demand Chromium install if not present.
+    This is a best-effort fallback for environments where the build step
+    failed or was skipped. On restricted platforms (like Render free tier),
+    this may still fail, but we provide clearer logging.
+    """
+    import subprocess, sys
+    try:
+        print('[PDF] Attempting on-demand Chromium install...')
+        subprocess.run([sys.executable, '-m', 'playwright', 'install', 'chromium', '--with-deps'],
+                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
+        print('[PDF] On-demand Chromium install completed.')
+    except Exception as e:
+        print(f'[PDF] On-demand install failed: {e}')
+
 
 def _dbg(msg: str):
     if PDF_DEBUG:
@@ -71,19 +86,27 @@ async def generate_simulation_pdf(
                 browser = await p.chromium.launch(headless=True, args=CHROMIUM_FLAGS)
             except Exception as launch_err:
                 msg = str(launch_err).lower()
-                if "executable" in msg and "doesn't exist" in msg:
+                retry = False
+                if "executable" in msg and ("doesn't exist" in msg or "not found" in msg):
+                    retry = True
+                if retry:
+                    await _attempt_install_chromium()
+                    try:
+                        browser = await p.chromium.launch(headless=True, args=CHROMIUM_FLAGS)
+                    except Exception as second_err:
+                        raise RuntimeError(
+                            "Chromium executable missing after fallback install. Ensure build step includes 'python -m playwright install chromium'."
+                        ) from second_err
+                elif "lib" in msg and "not found" in msg:
                     raise RuntimeError(
-                        "Chromium executable missing. Ensure build installs with 'python -m playwright install chromium' and PLAYWRIGHT_BROWSERS_PATH is set."
+                        "Missing system libraries for Chromium (fonts/libnss3). Requires system packages not available on free plan."
                     ) from launch_err
-                if "lib" in msg and "not found" in msg:
+                elif "sandbox" in msg:
                     raise RuntimeError(
-                        "Missing system libraries for Chromium (fonts/libnss3). Install necessary dependencies."
+                        "Chromium sandbox error even with --no-sandbox. Container restrictions may apply."
                     ) from launch_err
-                if "sandbox" in msg:
-                    raise RuntimeError(
-                        "Chromium sandbox error. '--no-sandbox' provided; container restrictions may apply."
-                    ) from launch_err
-                raise
+                else:
+                    raise
 
             page = await browser.new_page()
             await page.set_content(html, wait_until="domcontentloaded")
@@ -159,7 +182,7 @@ def generate_report_html(data: Dict[str, Any]) -> str:
     ae_color = metric_color(ae, {'good': 80, 'ok': 60})
     rme_color = metric_color(rme, {'good': 80, 'ok': 60})
     ce_color = metric_color(ce, {'good': 80, 'ok': 60})
-    
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -233,8 +256,9 @@ def generate_report_html(data: Dict[str, Any]) -> str:
     </div>
 </body>
 </html>"""
-    
+
     return html
+
 
 
 if __name__ == "__main__":
