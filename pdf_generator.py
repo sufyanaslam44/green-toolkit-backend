@@ -1,94 +1,123 @@
-"""
-PDF Report Generator for Green Chemistry Simulations
-Uses Playwright to render HTML and generate high-quality PDF reports
+"""PDF Report Generator for Green Chemistry Simulations.
+
+Enhanced for reliability on Render.com (free tier) & Windows.
+Adds diagnostic logging, temp-directory output, safer Chromium flags, and
+environment variable toggles:
+
+  PDF_DEBUG=1      -> verbose debug logs
+  DISABLE_PDF=1    -> force-disable generation (useful for health checks)
+  PDF_TMP_DIR=/tmp -> override temp output directory
 """
 from playwright.async_api import async_playwright
 from pathlib import Path
 from datetime import datetime
 import json
+import os
+import tempfile
 from typing import Dict, Any
+
+PDF_DEBUG = os.getenv("PDF_DEBUG", "0") == "1"
+PDF_DISABLE = os.getenv("DISABLE_PDF", "0") == "1"
+PDF_TMP_DIR = os.getenv("PDF_TMP_DIR")
+
+CHROMIUM_FLAGS = [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    # Avoid timers being throttled in background which can occasionally hang set_content
+    "--disable-background-timer-throttling",
+    "--disable-renderer-backgrounding",
+]
+
+
+def _dbg(msg: str):
+    if PDF_DEBUG:
+        print(f"[PDF][DEBUG] {msg}")
+
+
+def _safe_name(text: str) -> str:
+    s = "".join(c for c in text if c.isalnum() or c in (" ", "-", "_")).strip()
+    return (s or "simulation").replace(" ", "_")
+
+
+def _resolve_output(simulation_data: Dict[str, Any], output_path: str | None) -> Path:
+    if output_path:
+        return Path(output_path).resolve()
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    rxn = simulation_data.get("reaction_name", "simulation") if isinstance(simulation_data, dict) else "simulation"
+    base_dir = Path(PDF_TMP_DIR or tempfile.gettempdir())
+    base_dir.mkdir(parents=True, exist_ok=True)
+    return base_dir / f"green_chem_report_{_safe_name(str(rxn))}_{ts}.pdf"
 
 
 async def generate_simulation_pdf(
     simulation_data: Dict[str, Any],
-    output_path: str = None
+    output_path: str | None = None
 ) -> str:
-    """
-    Generate a PDF report from simulation data.
-    Optimized for Render.com free tier with minimal overhead.
-    
-    Args:
-        simulation_data: Dictionary containing all simulation metrics and data
-        output_path: Optional path for the PDF file. If None, auto-generates filename.
-    
-    Returns:
-        str: Path to the generated PDF file
-    """
+    if PDF_DISABLE:
+        raise RuntimeError("PDF generation disabled (DISABLE_PDF=1)")
+
+    out_path = _resolve_output(simulation_data, output_path)
+    _dbg(f"Output path: {out_path}")
+
+    # Generate HTML first (fail fast if data invalid)
+    html = generate_report_html(simulation_data)
+
     try:
-        if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            reaction_name = simulation_data.get('reaction_name', 'simulation') if isinstance(simulation_data, dict) else 'simulation'
-            safe_name = "".join(c for c in reaction_name if c.isalnum() or c in (' ', '-', '_')).strip()
-            safe_name = safe_name.replace(' ', '_') or 'simulation'
-            output_path = f"green_chem_report_{safe_name}_{timestamp}.pdf"
-        
-        print(f"[PDF] Generating: {output_path}")
-        
-        # Generate simple HTML content for the PDF
-        html_content = generate_report_html(simulation_data)
-        
-        # Use Playwright async API to generate PDF (optimized for free tier)
         async with async_playwright() as p:
-            print("[PDF] Launching browser...")
-            
-            # Launch browser with minimal flags for better compatibility on free tier
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',  # Critical for low-memory environments
-                    '--disable-gpu',
-                    '--single-process'  # Reduce memory usage
-                ]
-            )
-            
+            _dbg("Launching Chromium with flags: " + " ".join(CHROMIUM_FLAGS))
+            try:
+                browser = await p.chromium.launch(headless=True, args=CHROMIUM_FLAGS)
+            except Exception as launch_err:
+                msg = str(launch_err).lower()
+                if "executable" in msg and "doesn't exist" in msg:
+                    raise RuntimeError(
+                        "Chromium executable missing. Ensure build installs with 'python -m playwright install chromium' and PLAYWRIGHT_BROWSERS_PATH is set."
+                    ) from launch_err
+                if "lib" in msg and "not found" in msg:
+                    raise RuntimeError(
+                        "Missing system libraries for Chromium (fonts/libnss3). Install necessary dependencies."
+                    ) from launch_err
+                if "sandbox" in msg:
+                    raise RuntimeError(
+                        "Chromium sandbox error. '--no-sandbox' provided; container restrictions may apply."
+                    ) from launch_err
+                raise
+
             page = await browser.new_page()
-            
-            # Use setContent with minimal wait - no network calls needed
-            await page.set_content(html_content, wait_until='domcontentloaded')
-            
-            # Generate PDF with simple settings
+            await page.set_content(html, wait_until="domcontentloaded")
+            _dbg("HTML content set; creating PDF...")
             await page.pdf(
-                path=output_path,
-                format='A4',
+                path=str(out_path),
+                format="A4",
                 print_background=True,
-                margin={
-                    'top': '20mm',
-                    'right': '15mm',
-                    'bottom': '20mm',
-                    'left': '15mm'
-                }
+                margin={"top": "20mm", "right": "15mm", "bottom": "20mm", "left": "15mm"},
             )
-            
             await browser.close()
-        
-        print(f"[PDF] ✅ Success: {output_path}")
-        return output_path
     except Exception as e:
         import traceback
-        error_msg = f"PDF generation error: {str(e)}\n{traceback.format_exc()}"
-        print(f"[PDF] ❌ Error: {error_msg}")
-        raise Exception(f"Failed to generate PDF: {str(e)}")
+        tb = traceback.format_exc()
+        print(f"[PDF] ❌ Error: {e}\n{tb}")
+        # Cleanup partial file if present
+        try:
+            if out_path.exists():
+                out_path.unlink()
+        except Exception:
+            pass
+        raise
+
+    print(f"[PDF] ✅ Success: {out_path}")
+    return str(out_path)
 
 
 def generate_report_html(data: Dict[str, Any]) -> str:
     """Generate simple, clean HTML for the PDF report - optimized for Render.com free tier."""
-    
+
     reaction_name = data.get('reaction_name', 'Green Chemistry Simulation')
     timestamp = datetime.now().strftime("%B %d, %Y at %I:%M %p")
-    
-        # Extract metrics with safe defaults
+
+    # Extract metrics with safe defaults
     ae = data.get('atom_economy_pct', 'N/A')
     pmi = data.get('pmi', 'N/A')
     e_factor = data.get('e_factor', 'N/A')
@@ -209,7 +238,8 @@ def generate_report_html(data: Dict[str, Any]) -> str:
 
 
 if __name__ == "__main__":
-    # Test with sample data
+    # Manual quick test (synchronous wrapper)
+    import asyncio
     sample_data = {
         "reaction_name": "Test Synthesis",
         "atom_economy_pct": 85.5,
@@ -238,6 +268,5 @@ if __name__ == "__main__":
         },
         "ai_suggestions": ["Consider using greener solvents", "Optimize reaction time"]
     }
-    
-    pdf_path = generate_simulation_pdf(sample_data)
-    print(f"PDF generated: {pdf_path}")
+    path = asyncio.run(generate_simulation_pdf(sample_data))
+    print("Generated:", path)
