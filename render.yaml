@@ -7,7 +7,7 @@ services:
     plan: free
     
     # Build Configuration
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install --no-cache-dir --only-binary=all -r requirements.txt
     
     # Start Configuration
     startCommand: python run_server.py
