@@ -1006,7 +1006,17 @@ function drawEfficiencyDials(data) {
     // Render all UI outputs
     function renderAll(data) {
       // Store the last simulation data globally for PDF generation
-      window.lastSimulationData = data;
+      // Store both the API response (computed metrics) AND the input payload
+      window.lastSimulationData = {
+        ...data,  // API response with computed metrics
+        // Also store current input data
+        product: buildPayload().product,
+        reactants: buildPayload().reactants,
+        solvents: buildPayload().solvents || [],
+        catalysts: buildPayload().catalysts || [],
+        workup: buildPayload().workup,
+        conditions: buildPayload().conditions
+      };
       
       // number cards
       setTxt('#r_ae',     data.atom_economy_pct ?? '—');
@@ -1084,27 +1094,16 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
           return;
         }
         
-        // Get current simulation data
-        const payload = buildPayload();
-        
         // Get reaction name
         const reactionName = document.getElementById('reaction_name')?.value || 'Green Chemistry Simulation';
         
-        // Use the stored simulation data (which has all computed metrics)
-        // and merge with current input data
+        // Prepare complete payload with all data
         const fullPayload = {
-          // Include all computed metrics from the last simulation FIRST
+          // Include all data from lastSimulationData (has both input and computed metrics)
           ...window.lastSimulationData,
-          // Then override with current input data (this preserves product, reactants, etc.)
+          // Add reaction name
           reaction_name: reactionName,
-          product: payload.product || {},
-          reactants: payload.reactants || [],
-          solvents: payload.solvents || [],
-          catalysts: payload.catalysts || [],
-          workup: payload.workup || {},
-          conditions: payload.conditions || {},
-          options: payload.options || {},
-          // AI suggestions from the page
+          // Add AI suggestions from the page
           ai_suggestions: Array.from(document.querySelectorAll('#ai-suggestions li'))
             .map(li => li.textContent.trim())
             .filter(t => t && !t.includes('Run simulation') && !t.includes('No suggestions'))
