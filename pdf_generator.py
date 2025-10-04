@@ -39,16 +39,35 @@ async def generate_simulation_pdf(
         # Use Playwright async API to generate PDF
         async with async_playwright() as p:
             print("[PDF] Launching browser...")
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    '--disable-gpu',
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',  # Important for Docker/Render
-                    '--disable-setuid-sandbox',
-                    '--single-process'  # Helps with memory constraints
-                ]
-            )
+            
+            # Try to get browser executable path for debugging
+            try:
+                exec_path = p.chromium.executable_path
+                print(f"[PDF] Chromium executable: {exec_path}")
+            except Exception as e:
+                print(f"[PDF] Could not get executable path: {e}")
+            
+            # Launch with error handling
+            try:
+                browser = await p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-gpu',
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage',  # Important for Docker/Render
+                        '--disable-setuid-sandbox',
+                        '--single-process',  # Helps with memory constraints
+                        '--disable-software-rasterizer'
+                    ]
+                )
+            except Exception as launch_error:
+                print(f"[PDF] Browser launch failed: {launch_error}")
+                print("[PDF] Attempting fallback launch without headless...")
+                # Fallback: try without some flags
+                browser = await p.chromium.launch(
+                    headless=True,
+                    args=['--no-sandbox', '--disable-setuid-sandbox']
+                )
             
             page = await browser.new_page()
             await page.set_content(html_content, wait_until='networkidle')

@@ -4,10 +4,11 @@
 echo "Installing Python dependencies..."
 pip install -r requirements.txt
 
-echo "Installing Playwright Chromium browser..."
-playwright install --with-deps chromium 2>/dev/null || playwright install chromium
+echo "Installing Playwright browsers..."
+# Install chromium without --with-deps (Render free tier has no root access)
+playwright install chromium
 
-# Note: Trying --with-deps first, but falling back to basic install if it fails
-# Render.com has most system dependencies pre-installed
+echo "Verifying Chromium installation..."
+python3 -c "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); print(f'Chromium path: {p.chromium.executable_path}'); p.stop()" || echo "Warning: Could not verify Chromium"
 
 echo "Build completed successfully!"
