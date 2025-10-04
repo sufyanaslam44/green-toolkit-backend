@@ -535,14 +535,14 @@ async def generate_pdf_report(payload: PDFGenerationIn):
         error_trace = traceback.format_exc()
         print(f"[API] ❌ PDF generation error:\n{error_trace}")
         
-        # Return detailed error for debugging
+        # Return simple error message string
+        error_msg = str(e)
+        if "Executable doesn't exist" in error_msg:
+            error_msg = "Chromium browser not installed on server. Please contact administrator."
+        
         raise HTTPException(
             status_code=500,
-            detail={
-                "error": "PDF generation failed",
-                "message": str(e),
-                "type": type(e).__name__
-            }
+            detail=f"PDF generation failed: {error_msg}"
         )
 
 # ------------------------------------------------------------------------------

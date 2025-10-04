@@ -1124,8 +1124,17 @@ setTxt('#r_sf',  data.sf_overall ?? '—');
         });
         
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || 'PDF generation failed');
+          let errorMsg = 'PDF generation failed';
+          try {
+            const error = await response.json();
+            // Handle both string and object detail formats
+            errorMsg = typeof error.detail === 'string' 
+              ? error.detail 
+              : error.detail?.message || error.message || JSON.stringify(error.detail) || errorMsg;
+          } catch (e) {
+            errorMsg = `Server error (${response.status})`;
+          }
+          throw new Error(errorMsg);
         }
         
         // Download the PDF
